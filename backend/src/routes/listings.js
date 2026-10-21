@@ -28,6 +28,7 @@ const { getReviewScoresForUser } = require('../services/reviewService');
 const { logAuctionCreated } = require('../services/bestOfferLogger');
 const Block = require('../models/Block');
 const { scanTexts, scanForContactInfo, describeContactInfoTypes, scanTextsForProhibitedContent, scanForAbusiveContent } = require('../utils/contentFilter');
+const { GIVEAWAY_EXCLUDED, normalizeCategory } = require('../config/categories');
 const { appendModerationAudit } = require('../services/moderationAuditService');
 const { scanListingText } = require('../services/contentSafetyService');
 const { recordViolation } = require('../services/contentViolationService');
@@ -1419,11 +1420,14 @@ router.post(
     // Giving away a vehicle is not the same problem as giving away a watch:
     // it carries the trader/warranty and AML duties built for a *sale*, plus
     // registration and prize-tax questions this feature does not answer. Property
-    // raises the same questions, only larger. Until those are settled, both stay out.
-    if (isGiveaway && ['vehicles', 'real-estate'].includes(resolvedCategory.toLowerCase().replace(/\s+/g, '-'))) {
+    // raises the same questions, only larger. Alcohol adds age verification and
+    // excise duty, which a free draw has no way to collect. Until those are
+    // settled, all three stay out.
+    const giveawayBlock = GIVEAWAY_EXCLUDED[normalizeCategory(resolvedCategory)];
+    if (isGiveaway && giveawayBlock) {
       return res.status(400).json({
         error: 'giveaway_category_not_allowed',
-        message: 'Vehicles and property cannot be given away — they carry transfer and tax obligations this format does not cover.'
+        message: `This category cannot be given away — it carries ${giveawayBlock} that this format does not cover.`
       });
     }
     // "Free" has to hold for the winner too. A prize that costs postage to

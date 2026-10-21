@@ -28,6 +28,7 @@ const { applyDisputeAccountOutcome } = require('../services/accountStatusService
 const { applyDisputeVerdictImpact } = require('../services/reputationService');
 const { appendModerationAudit } = require('../services/moderationAuditService');
 const { approveListing, rejectListing, ReviewError } = require('../services/listingReviewService');
+const { CATEGORY_IDS, isValidCategory, normalizeCategory } = require('../config/categories');
 const {
   ListingEditError,
   updateListingText,
@@ -368,8 +369,7 @@ router.get('/auctions', authenticateToken, requireAdmin, async (req, res) => {
     const cat = req.query.category && String(req.query.category).trim();
     const stat = req.query.status && String(req.query.status).trim();
     const q = req.query.q && String(req.query.q).trim();
-    const allowedCat = ['electronics', 'home-garden', 'art', 'collectibles', 'jewelry', 'real-estate', 'vehicles'];
-    if (cat && cat !== 'all' && allowedCat.includes(cat)) {
+    if (cat && cat !== 'all' && isValidCategory(cat)) {
       filter.category = cat;
     }
     if (stat && stat !== 'all') {
@@ -657,11 +657,10 @@ router.post('/auctions/:id/reject', authenticateToken, requireAdmin, async (req,
 router.patch('/auctions/:id/category', authenticateToken, requireAdmin, async (req, res) => {
   if (!isValidObjectId(req.params.id)) return res.status(400).json({ error: 'Invalid listing ID' });
   try {
-    const ALLOWED = ['electronics', 'home-garden', 'art', 'collectibles', 'jewelry', 'real-estate', 'vehicles'];
-    const category = req.body?.category ? String(req.body.category).trim().toLowerCase().replace(/\s+/g, '-') : '';
+    const category = req.body?.category ? normalizeCategory(req.body.category) : '';
     const subCategory = req.body?.subCategory ? String(req.body.subCategory).trim() : '';
-    if (!category || !ALLOWED.includes(category)) {
-      return res.status(400).json({ error: 'Invalid category', allowed: ALLOWED });
+    if (!category || !isValidCategory(category)) {
+      return res.status(400).json({ error: 'Invalid category', allowed: CATEGORY_IDS });
     }
     if (!subCategory) {
       return res.status(400).json({ error: 'Sub-category is required' });

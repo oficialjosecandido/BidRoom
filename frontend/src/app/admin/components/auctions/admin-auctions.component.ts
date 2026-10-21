@@ -10,6 +10,7 @@ import { AdminService, AdminCreateAuctionPayload } from '../../services/admin.se
 import { AdminSidebarComponent } from '../sidebar/admin-sidebar.component';
 import { Listing } from '../../../shared/services/listings.service';
 import { API_CONFIG } from '../../../shared/config/api.config';
+import { CATEGORIES } from '../../../shared/config/categories.config';
 
 type ReportReason =
   | 'fraud_scam'
@@ -148,15 +149,9 @@ export class AdminAuctionsComponent implements OnInit {
 
   durations = ['24 hours', '3 days', '7 days', '10 days', '15 days', '30 days'];
 
-  private readonly categoryLabelMap: Record<string, string> = {
-    electronics: 'Electronics',
-    'home-garden': 'Home & Garden',
-    art: 'Art',
-    collectibles: 'Collectibles',
-    jewelry: 'Jewelry',
-    vehicles: 'Vehicles',
-    'real-estate': 'Real Estate'
-  };
+  /** Built from the shared catalogue so a new category never shows as a raw slug. */
+  private readonly categoryLabelMap: Record<string, string> =
+    Object.fromEntries(CATEGORIES.map(c => [c.id, c.name]));
 
   ngOnInit(): void {
     this.search$.pipe(

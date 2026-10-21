@@ -111,18 +111,23 @@ function classifyFromTitle(title) {
     || (/\brouge\b/.test(t) && /\b(levre|labios|lipstick|couture n)\b/.test(t))
   ) && !isClothing;
 
+  // Subcategories must exist under the category in categories.config.ts —
+  // 'Fashion' and 'Beauty' never did, so these imports were unreachable from
+  // the browse filters until the fashion category was added.
   if (isWatch) return { category: 'jewelry', subCategory: 'Luxury Watches' };
-  if (isJewelry) return { category: 'jewelry', subCategory: 'Fine Jewelry' };
-  if (isBeauty) return { category: 'collectibles', subCategory: 'Beauty' };
-  if (isBag || isEyewear || isClothing) return { category: 'collectibles', subCategory: 'Fashion' };
-  return { category: 'collectibles', subCategory: 'Fashion' };
+  if (isJewelry) return { category: 'jewelry', subCategory: 'Other Jewelry' };
+  if (isBeauty) return { category: 'collectibles', subCategory: 'Other Collectibles' };
+  if (isEyewear) return { category: 'fashion', subCategory: 'Sunglasses' };
+  if (isBag) return { category: 'fashion', subCategory: 'Handbags' };
+  if (isClothing) return { category: 'fashion', subCategory: 'Clothing' };
+  return { category: 'fashion', subCategory: 'Other Fashion' };
 }
 
 function normalizeCategory(row, title) {
   // Prefer title heuristics — Vinted CSV often has Women/Other
   const fromTitle = classifyFromTitle(title || row.titulo || row.title);
   const rawCat = String(row.category || '').trim().toLowerCase();
-  if (/jewelry|watch/.test(rawCat) && fromTitle.category === 'collectibles') {
+  if (/jewelry|watch/.test(rawCat) && fromTitle.category === 'fashion') {
     // CSV says jewelry but title didn't match — keep title Fashion unless watch/jewelry keywords weak
     if (/watch/.test(rawCat)) return { category: 'jewelry', subCategory: 'Luxury Watches' };
     if (/jewelry/.test(rawCat)) return { category: 'jewelry', subCategory: 'Fine Jewelry' };

@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /**
- * Backfill -w480.webp / -w960.webp variants for existing listing images.
+ * Backfill -w160 / -w480 / -w640 / -w960 WebP variants for existing listing images.
  *
  *   node src/scripts/backfill_image_variants.js --dry-run --limit 5
  *   node src/scripts/backfill_image_variants.js
@@ -60,7 +60,7 @@ async function ensureVariantsForUrl(imageUrl, { dryRun }) {
   if (!blobName) return { skipped: true, reason: 'bad-url' };
 
   // Skip non-raster / already-variant paths
-  if (/-w(480|960)\.webp$/i.test(blobName)) {
+  if (/-w(160|480|640|960)\.webp$/i.test(blobName)) {
     return { skipped: true, reason: 'already-variant' };
   }
 

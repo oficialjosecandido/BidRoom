@@ -54,20 +54,22 @@ app.get('/sitemap.xml', async (_req, res) => {
 
 // Serve static files from /browser.
 // Only build-hashed filenames (main-4YIEBKAU.js, styles-XXXX.css, …) may be
-// cached immutably — everything else (i18n JSON, manifest, icons, og-image)
-// keeps a short TTL so a deploy is picked up without a hash change.
+// cached immutably. i18n JSON is deploy-versioned in practice and is large on
+// the critical path, so it gets a longer TTL than generic unhashed assets.
 const HASHED_ASSET = /-[A-Z0-9]{8}\.(js|css)$/;
+const I18N_ASSET = /[/\\]i18n[/\\]/i;
 app.use(
   express.static(browserDistFolder, {
     index: false,
     redirect: false,
-    setHeaders: (res, path) => {
-      res.setHeader(
-        'Cache-Control',
-        HASHED_ASSET.test(path)
-          ? 'public, max-age=31536000, immutable'
-          : 'public, max-age=3600',
-      );
+    setHeaders: (res, filePath) => {
+      if (HASHED_ASSET.test(filePath)) {
+        res.setHeader('Cache-Control', 'public, max-age=31536000, immutable');
+      } else if (I18N_ASSET.test(filePath)) {
+        res.setHeader('Cache-Control', 'public, max-age=86400, stale-while-revalidate=604800');
+      } else {
+        res.setHeader('Cache-Control', 'public, max-age=3600');
+      }
     },
   }),
 );

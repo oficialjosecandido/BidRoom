@@ -42,7 +42,7 @@
     {
       "route": "/i18n/*",
       "headers": {
-        "Cache-Control": "public, max-age=300, must-revalidate"
+        "Cache-Control": "public, max-age=86400, stale-while-revalidate=604800"
       }
     },
     {

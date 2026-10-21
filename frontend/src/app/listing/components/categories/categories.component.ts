@@ -26,36 +26,16 @@ export class CategoriesComponent implements OnInit {
   followTogglingCategory: string | null = null;
   isLoggedIn = false;
 
-  private readonly categoryMetaKeys: Record<string, { title: string; desc: string }> = {
-    electronics: {
-      title: 'home.categories.electronics.title',
-      desc: 'home.categories.electronics.desc'
-    },
-    'home-garden': {
-      title: 'home.categories.homeGarden.title',
-      desc: 'home.categories.homeGarden.desc'
-    },
-    art: {
-      title: 'home.categories.art.title',
-      desc: 'home.categories.art.desc'
-    },
-    collectibles: {
-      title: 'home.categories.collectibles.title',
-      desc: 'home.categories.collectibles.desc'
-    },
-    jewelry: {
-      title: 'home.categories.jewelry.title',
-      desc: 'home.categories.jewelry.desc'
-    },
-    'real-estate': {
-      title: 'home.categories.realEstate.title',
-      desc: 'home.categories.realEstate.desc'
-    },
-    vehicles: {
-      title: 'home.categories.vehicles.title',
-      desc: 'home.categories.vehicles.desc'
-    }
-  };
+  /**
+   * The browse page shows a richer blurb than the catalogue's one-liner.
+   * Slugs with a hyphen become camelCase here because that is how the i18n
+   * bundles key them (home-garden → homeGarden).
+   */
+  private readonly categoryMetaKeys: Record<string, { title: string; desc: string }> =
+    Object.fromEntries(CATEGORIES.map(c => {
+      const k = c.id.replace(/-([a-z])/g, (_, ch: string) => ch.toUpperCase());
+      return [c.id, { title: `home.categories.${k}.title`, desc: `home.categories.${k}.desc` }];
+    }));
 
   ngOnInit(): void {
     this.authService.currentUser$.subscribe(user => {

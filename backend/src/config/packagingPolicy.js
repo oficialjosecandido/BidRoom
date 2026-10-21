@@ -50,6 +50,72 @@ const PACKAGING_POLICY = {
       'Add silica gel packet if shipping watches',
       'Do not mention jewellery or watches on the outer label (theft prevention)'
     ]
+  },
+  'wine-spirits': {
+    label: 'Wine & Spirits',
+    requirements: [
+      'Use a purpose-made moulded wine shipper or polystyrene bottle insert — bubble wrap alone is not accepted',
+      'Ship bottles upright; never lay a corked bottle on its side in transit',
+      'Wrap each bottle individually so glass never touches glass',
+      'Seal in a double-wall box and mark FRAGILE and THIS SIDE UP',
+      'Declare the alcohol content on the carrier paperwork — undeclared alcohol is routinely refused or seized'
+    ]
+  },
+  books: {
+    label: 'Books & Manuscripts',
+    requirements: [
+      'Wrap in acid-free tissue or glassine first — never cling film or newspaper',
+      'Protect all four corners and the spine with board or foam',
+      'Use a rigid book wrap or box; padded mailers crush spines',
+      'Add a waterproof inner layer — water damage is the most common book claim',
+      'Mark DO NOT BEND'
+    ]
+  },
+  comics: {
+    label: 'Comics & Animation',
+    requirements: [
+      'Bag and board every item individually',
+      'Sandwich between rigid cardboard larger than the item',
+      'Use a rigid comic mailer — no soft envelopes',
+      'Add a waterproof inner layer',
+      'Mark DO NOT BEND'
+    ]
+  },
+  fashion: {
+    label: 'Fashion',
+    requirements: [
+      'Fold garments with acid-free tissue between layers to avoid creasing',
+      'Stuff handbags and shoes to hold their shape in transit',
+      'Include the dust bag, box and authenticity card when the listing showed them',
+      'Seal in a waterproof inner bag before boxing'
+    ]
+  },
+  sports: {
+    label: 'Sports',
+    requirements: [
+      'Protect signed items from rubbing — never let ink touch another surface',
+      'Frame-backed items need corner protectors and a rigid box',
+      'Use a waterproof inner layer for shirts and textiles',
+      'Mark FRAGILE for anything framed or cased'
+    ]
+  },
+  archaeology: {
+    label: 'Archaeology, Fossils & Minerals',
+    requirements: [
+      'Wrap each specimen individually — crystals chip against each other',
+      'Double-box heavy stone with at least 5 cm of padding on every side',
+      'Immobilise the piece completely; movement in transit is what breaks fossils',
+      'Mark FRAGILE and HEAVY, and state the weight on the label'
+    ]
+  },
+  'music-film': {
+    label: 'Music & Film',
+    requirements: [
+      'Ship vinyl in a purpose-made record mailer with stiffeners on both sides',
+      'Place the record outside the sleeve to prevent seam splits',
+      'Use a rigid tube or flat rigid board for posters — never fold',
+      'Add a waterproof inner layer and mark DO NOT BEND'
+    ]
   }
 };
 

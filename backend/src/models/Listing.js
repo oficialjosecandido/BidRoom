@@ -1,5 +1,6 @@
 const mongoose = require('mongoose');
 const { imageSchema } = require('../shared/schemas/imageSchema');
+const { CATEGORY_IDS } = require('../config/categories');
 
 const listingSchema = new mongoose.Schema({
   title: {
@@ -32,7 +33,7 @@ const listingSchema = new mongoose.Schema({
   category: {
     type: String,
     required: true,
-    enum: ['electronics', 'home-garden', 'art', 'collectibles', 'jewelry', 'real-estate', 'vehicles'],
+    enum: CATEGORY_IDS,
     index: true
   },
   subCategory: {

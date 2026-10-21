@@ -13,85 +13,8 @@ import {
 } from '../../services/admin.service';
 import { AdminSidebarComponent } from '../sidebar/admin-sidebar.component';
 import { PrivateRoomService } from '../../../private-room/services/private-room.service';
+import { CATEGORIES } from '../../../shared/config/categories.config';
 
-const NEXUS_CATEGORIES: { id: string; name: string; subCategories: string[] }[] = [
-  {
-    id: 'electronics',
-    name: 'Electronics',
-    subCategories: [
-      'Laptops', 'Desktop Computers', 'Computer Components',
-      'Smartphones', 'Tablets', 'Mobile Accessories',
-      'Headphones', 'Speakers', 'Hi Fi Systems', 'Turntables',
-      'Gaming Consoles', 'Video Games', 'Gaming Accessories',
-      'Digital Cameras', 'Film Cameras', 'Camera Lenses', 'Camera Accessories',
-      'Televisions', 'Projectors', 'Streaming Devices',
-      'Smart Watches', 'Fitness Trackers', 'Wearables Accessories',
-      'Other Electronics'
-    ]
-  },
-  {
-    id: 'home-garden',
-    name: 'Home & Garden',
-    subCategories: [
-      'Tables', 'Chairs', 'Cabinets', 'Shelves', 'Beds',
-      'Lamps', 'Mirrors', 'Vases', 'Wall Decor', 'Decorative Objects',
-      'Cookware', 'Tableware', 'Glassware', 'Barware',
-      'Garden Furniture', 'Garden Tools', 'Outdoor Decor', 'Planters',
-      'Rugs', 'Curtains', 'Blankets', 'Cushions',
-      'Lighting', 'Other Home & Garden'
-    ]
-  },
-  {
-    id: 'art',
-    name: 'Art',
-    subCategories: ['Paintings', 'Drawings', 'Prints', 'Photography', 'Sculptures', 'Figurines', 'Other Art']
-  },
-  {
-    id: 'collectibles',
-    name: 'Collectibles',
-    subCategories: [
-      'Definitive Stamps', 'Commemorative Stamps', 'Airmail Stamps',
-      'Postage Due Stamps', 'Revenue / Fiscal Stamps', 'Official Stamps',
-      'Military Mail', 'Local Issues', 'First Day Covers (FDC)',
-      'Stamp Booklets', 'Collections / Lots',
-      'Classic Stamps (Before 1900)', 'Early 20th Century (1900 to 1945)',
-      'Post War (1945 to 1960)', 'Late 20th Century (1960 to 2000)',
-      'Modern Stamps (2000 to Present)',
-      'Coins & Banknotes', 'Trading Cards', 'Toys & Models',
-      'Sports Memorabilia', 'Music Memorabilia', 'Movie Memorabilia',
-      'Vintage Items', 'Other Collectibles'
-    ]
-  },
-  {
-    id: 'jewelry',
-    name: 'Jewelry',
-    subCategories: [
-      'Engagement Rings', 'Wedding Rings', 'Fashion Rings',
-      'Chains', 'Pendants',
-      'Bangles', 'Charm Bracelets',
-      'Stud Earrings', 'Hoop Earrings', 'Drop Earrings',
-      'Luxury Watches', 'Vintage Watches', 'Smart Watches',
-      'Brooches & Pins', 'Jewelry Sets', 'Loose Gemstones', 'Other Jewelry'
-    ]
-  },
-  {
-    id: 'vehicles',
-    name: 'Vehicles',
-    subCategories: [
-      'Cars', 'Classic Cars', 'Electric & Hybrid Cars',
-      'Motorcycles', 'Scooters & Mopeds',
-      'Vans & Minibuses', 'Trucks & HGV',
-      'Boats', 'Jet Skis & Watercraft', 'Sailboats',
-      'Caravans & Motorhomes', 'ATVs & Quad Bikes',
-      'Vehicle Parts', 'Vehicle Accessories', 'Other Vehicles'
-    ]
-  },
-  {
-    id: 'real-estate',
-    name: 'Real Estate',
-    subCategories: ['Apartments', 'Houses', 'Land', 'Commercial', 'Other Real Estate']
-  }
-];
 
 const TEXT_LANGUAGES: { suffix: 'Pt' | 'En' | 'Fr' | 'Es'; label: string }[] = [
   { suffix: 'Pt', label: 'Português' },
@@ -142,7 +65,8 @@ export class AdminAuctionDetailsComponent implements OnInit, OnDestroy {
   showPlatinumSelection = false;
   selectedPlatinumBidders: string[] = [];
 
-  readonly categories = NEXUS_CATEGORIES;
+  /** Shared catalogue — this file used to carry its own trimmed copy. */
+  readonly categories = CATEGORIES;
   editCategory = '';
   editSubCategory = '';
   categorySavedMsg: string | null = null;

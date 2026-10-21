@@ -54,6 +54,7 @@
     flex-shrink: 0;
   }
 
+  .view-listing-btn,
   .approve-listing-btn,
   .reject-listing-btn,
   .delete-listing-btn {
@@ -63,10 +64,24 @@
     font-weight: 700;
     cursor: pointer;
     transition: background 0.15s, color 0.15s, border-color 0.15s;
+    text-decoration: none;
+    display: inline-flex;
+    align-items: center;
 
     &:disabled {
       opacity: 0.5;
       cursor: not-allowed;
+    }
+  }
+
+  .view-listing-btn {
+    background: none;
+    border: 1.5px solid #0f172a;
+    color: #0f172a;
+
+    &:hover {
+      background: #0f172a;
+      color: #fff;
     }
   }
 

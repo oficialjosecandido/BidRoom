@@ -46,11 +46,15 @@ function classifyFromTitle(title) {
     || (/\brouge\b/.test(t) && /\b(levre|labios|lipstick|couture n)\b/.test(t))
   ) && !isClothing;
 
+  // Keep in step with classifyFromTitle in vinted_export.js — subcategories
+  // must exist under the category in categories.config.ts.
   if (isWatch) return { category: 'jewelry', subCategory: 'Luxury Watches' };
-  if (isJewelry) return { category: 'jewelry', subCategory: 'Fine Jewelry' };
-  if (isBeauty) return { category: 'collectibles', subCategory: 'Beauty' };
-  if (isBag || isEyewear || isClothing) return { category: 'collectibles', subCategory: 'Fashion' };
-  return { category: 'collectibles', subCategory: 'Fashion' };
+  if (isJewelry) return { category: 'jewelry', subCategory: 'Other Jewelry' };
+  if (isBeauty) return { category: 'collectibles', subCategory: 'Other Collectibles' };
+  if (isEyewear) return { category: 'fashion', subCategory: 'Sunglasses' };
+  if (isBag) return { category: 'fashion', subCategory: 'Handbags' };
+  if (isClothing) return { category: 'fashion', subCategory: 'Clothing' };
+  return { category: 'fashion', subCategory: 'Other Fashion' };
 }
 
 function detectLang(title) {

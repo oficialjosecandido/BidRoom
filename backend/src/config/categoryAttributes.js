@@ -93,6 +93,30 @@ const SCHEMAS = {
     { key: 'vin',          labelKey: 'vin',           label: 'Número de chassis (VIN)',      type: 'text',    required: false, filterable: false },
   ],
 
+  // ─── Vinhos e destilados ─────────────────────────────────────────────────
+  // Colheita, capacidade e teor alcoólico não são detalhe: sem eles o lote não
+  // é avaliável e a transportadora não aceita a expedição.
+  wine: [
+    { key: 'producer',   labelKey: 'producer',   label: 'Produtor / casa',        type: 'text',   required: true,  filterable: true, schemaOrg: 'brand' },
+    { key: 'vintage',    labelKey: 'vintage',    label: 'Colheita',               type: 'text',   required: true,  filterable: true },
+    { key: 'region',     labelKey: 'region',     label: 'Região / denominação',   type: 'text',   required: false, filterable: true },
+    { key: 'volume',     labelKey: 'volumeMl',   label: 'Capacidade',             type: 'number', required: true,  filterable: true, unit: 'ml' },
+    { key: 'abv',        labelKey: 'abv',        label: 'Teor alcoólico',         type: 'number', required: true,  filterable: true, unit: '%' },
+    { key: 'bottles',    labelKey: 'bottleCount', label: 'Número de garrafas',    type: 'number', required: false, filterable: true },
+    { key: 'fillLevel',  labelKey: 'fillLevel',  label: 'Nível de enchimento',    type: 'text',   required: false },
+  ],
+
+  // ─── Livros e manuscritos ────────────────────────────────────────────────
+  books: [
+    { key: 'author',     labelKey: 'author',     label: 'Autor',                  type: 'text',    required: true,  filterable: true, schemaOrg: 'author' },
+    { key: 'publisher',  labelKey: 'publisher',  label: 'Editora',                type: 'text',    required: false, filterable: true },
+    { key: 'year',       labelKey: 'year',       label: 'Ano de edição',          type: 'text',    required: true,  filterable: true },
+    { key: 'edition',    labelKey: 'edition',    label: 'Edição',                 type: 'text',    required: false, filterable: true },
+    { key: 'language',   labelKey: 'bookLanguage', label: 'Idioma',               type: 'text',    required: false, filterable: true },
+    { key: 'binding',    labelKey: 'binding',    label: 'Encadernação',           type: 'text',    required: false },
+    { key: 'signed',     labelKey: 'signed',     label: 'Assinado / dedicado',    type: 'boolean', required: false, filterable: true },
+  ],
+
   // ─── Genérico ────────────────────────────────────────────────────────────
   default: [
     { key: 'brand',    labelKey: 'brand',    label: 'Marca',    type: 'text', required: false, filterable: true, schemaOrg: 'brand' },
@@ -107,6 +131,7 @@ const SUBCATEGORY_MAP = {
   // Watches
   'Luxury Watches':   'watches',
   'Vintage Watches':  'watches',
+  'Pocket Watches':   'watches',
   'Smart Watches':    'watches',
   // Art
   'Paintings':        'art',
@@ -115,6 +140,17 @@ const SUBCATEGORY_MAP = {
   'Photography':      'art',
   'Sculptures':       'art',
   'Figurines':        'art',
+  'Modern & Contemporary Art': 'art',
+  'Old Master Works':          'art',
+  'Asian Art':                 'art',
+  'Tribal Art':                'art',
+  'African Art':               'art',
+  'Oceanic Art':               'art',
+  'Icons & Religious Art':     'art',
+  'Ceramics & Porcelain':      'art',
+  'Glass Art':                 'art',
+  'Original Comic Art':        'art',
+  'Animation Art & Cels':      'art',
   // Jewelry (non-watch)
   'Engagement Rings':    'jewelry',
   'Wedding Rings':       'jewelry',
@@ -148,6 +184,34 @@ const SUBCATEGORY_MAP = {
   'Modern Stamps (2000 to Present)':  'stamps',
   // Coins
   'Coins & Banknotes': 'coins',
+  'Ancient Coins':     'coins',
+  // Wine & spirits
+  'Port Wine':                  'wine',
+  'Madeira Wine':               'wine',
+  'Portuguese Wine':            'wine',
+  'Red Wine':                   'wine',
+  'White Wine':                 'wine',
+  'Rosé Wine':                  'wine',
+  'Sparkling Wine & Champagne': 'wine',
+  'Dessert & Fortified Wine':   'wine',
+  'Whisky':                     'wine',
+  'Cognac & Brandy':            'wine',
+  'Rum':                        'wine',
+  'Gin & Vodka':                'wine',
+  'Liqueurs':                   'wine',
+  'Aguardente & Bagaço':        'wine',
+  'Wine Collections / Lots':    'wine',
+  // Books & manuscripts
+  'Antiquarian Books (Before 1800)': 'books',
+  'Rare Books':             'books',
+  'First Editions':         'books',
+  'Signed Books':           'books',
+  'Illustrated Books':      'books',
+  "Children's Books":       'books',
+  'Atlases & Maps':         'books',
+  'Travel & Exploration':   'books',
+  'Manuscripts & Documents': 'books',
+  'Book Collections / Lots': 'books',
   // Vehicles
   'Cars':                   'vehicles',
   'Classic Cars':           'vehicles',
@@ -161,6 +225,7 @@ const SUBCATEGORY_MAP = {
   'Sailboats':              'vehicles',
   'Caravans & Motorhomes':  'vehicles',
   'ATVs & Quad Bikes':      'vehicles',
+  'Classic Motorcycles':    'vehicles',
 };
 
 // Category-level fallbacks (used when no subCategory match above)
@@ -169,6 +234,11 @@ const CATEGORY_MAP = {
   jewelry:  'jewelry',
   vehicles: 'vehicles',
   collectibles: 'stamps', // sensible default; stamp-heavy vertical
+  'wine-spirits': 'wine',
+  books:    'books',
+  comics:   'books', // albums share author/publisher/edition with books
+  // sports, fashion, music-film and archaeology fall through to the generic
+  // brand/year/material schema until they earn one of their own.
 };
 
 /**

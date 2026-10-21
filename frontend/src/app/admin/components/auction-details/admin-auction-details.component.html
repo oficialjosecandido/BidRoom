@@ -12,6 +12,15 @@
               <p class="page-lead">Nexus listing · Format {{ auction.auctionFormat }}</p>
             </div>
             <div class="header-actions">
+              @if (auction.slug) {
+                <a
+                  class="view-listing-btn"
+                  [href]="'/listing/' + auction.slug"
+                  target="_blank"
+                  rel="noopener noreferrer">
+                  View listing
+                </a>
+              }
               @if (auction.status === 'pending_review') {
                 <button
                   type="button"

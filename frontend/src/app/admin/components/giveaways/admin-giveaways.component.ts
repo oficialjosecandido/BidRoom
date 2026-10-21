@@ -12,7 +12,7 @@ import {
   AdminGiveawayDrawVideo
 } from '../../services/admin.service';
 import { AdminSidebarComponent } from '../sidebar/admin-sidebar.component';
-import { CATEGORIES } from '../../../shared/config/categories.config';
+import { CATEGORIES, GIVEAWAY_EXCLUDED_IDS } from '../../../shared/config/categories.config';
 import { formatEntryNumber } from '../../../shared/services/giveaway.service';
 
 interface GiveawayDraft {
@@ -128,11 +128,12 @@ export class AdminGiveawaysComponent implements OnInit, OnDestroy {
   readonly MIN_DESCRIPTION = 50;
 
   /**
-   * Vehicles and property are left out: handing either over as a prize carries
-   * transfer and tax obligations this format does not cover. The API refuses
-   * them too — this only avoids offering a choice that would fail.
+   * Vehicles, property and alcohol are left out: the first two carry transfer
+   * and tax obligations this format does not cover, and a free draw has no way
+   * to verify age or settle excise duty. The API refuses them too — this only
+   * avoids offering a choice that would fail.
    */
-  readonly categories = CATEGORIES.filter(c => c.id !== 'vehicles' && c.id !== 'real-estate');
+  readonly categories = CATEGORIES.filter(c => !GIVEAWAY_EXCLUDED_IDS.includes(c.id));
   readonly CONDITIONS = ['New', 'Used - Excellent', 'Used - Very Good', 'Used - Good', 'Used - Fair', 'For Parts or Not Working'];
   readonly DURATIONS = ['24 hours', '3 days', '7 days', '10 days', '15 days', '30 days'];
 

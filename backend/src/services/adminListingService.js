@@ -5,15 +5,7 @@ const { notifyListingWentLive } = require('./listingReviewService');
 const { sendPlatformListingPendingReviewAlert } = require('./auctionNotificationService');
 const logger = require('../utils/logger');
 
-const ALLOWED_CATEGORIES = [
-  'electronics',
-  'home-garden',
-  'art',
-  'collectibles',
-  'jewelry',
-  'real-estate',
-  'vehicles'
-];
+const { CATEGORY_IDS: ALLOWED_CATEGORIES } = require('../config/categories');
 
 const ALLOWED_CONDITIONS = [
   'New',

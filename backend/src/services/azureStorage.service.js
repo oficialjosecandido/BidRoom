@@ -3,7 +3,8 @@ const sharp = require('sharp');
 const logger = require('../utils/logger');
 
 /** Responsive WebP widths generated alongside each listing original. */
-const IMAGE_VARIANT_WIDTHS = [480, 960];
+const IMAGE_VARIANT_WIDTHS = [160, 480, 640, 960];
+const VARIANT_WIDTH_RE = /-w(160|480|640|960)\.webp$/i;
 
 class AzureStorageService {
   constructor() {
@@ -97,7 +98,7 @@ class AzureStorageService {
    */
   variantBlobName(originalBlobName, width) {
     const withoutQuery = String(originalBlobName || '').split('?')[0];
-    if (/-w(480|960)\.webp$/i.test(withoutQuery)) return withoutQuery;
+    if (VARIANT_WIDTH_RE.test(withoutQuery)) return withoutQuery;
     return `${withoutQuery}-w${width}.webp`;
   }
 
@@ -123,7 +124,7 @@ class AzureStorageService {
   }
 
   /**
-   * Generate and upload -w480 / -w960 WebP variants for a listing image buffer.
+   * Generate and upload -w160 / -w480 / -w640 / -w960 WebP variants for a listing image buffer.
    * Skips silently on non-raster or sharp failures (original still usable).
    */
   async uploadImageVariants(buffer, originalBlobName) {
@@ -331,7 +332,7 @@ class AzureStorageService {
 
   /**
    * Delete an image from Azure Blob Storage by its full URL.
-   * Also deletes -w480 / -w960 WebP variants when present.
+   * Also deletes -w160 / -w480 / -w640 / -w960 WebP variants when present.
    * @param {string} blobUrl - Full URL of the blob
    * @returns {Promise<void>}
    */

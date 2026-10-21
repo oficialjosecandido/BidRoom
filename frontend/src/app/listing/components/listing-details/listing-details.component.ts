@@ -804,7 +804,7 @@ export class ListingDetailsComponent implements OnInit, OnDestroy {
   }
 
   thumbImageSrc(url: string): string {
-    return listingImageSrc(url, 'thumb');
+    return listingImageSrc(url, 'micro');
   }
 
   onGalleryImgError(event: Event, originalUrl: string): void {

@@ -117,7 +117,10 @@ export class SeoService {
     const rawTitle   = listing.titlePt || listing.titleEn || listing.title || '';
     const rawDescPt  = listing.descriptionPt || listing.descriptionEn || listing.description || '';
     const cleanDesc  = rawDescPt.replace(/\s+/g, ' ').trim();
-    const image      = listing.images?.[0] || DEFAULT_OG;
+    const originalImage = listing.images?.[0] || DEFAULT_OG;
+    // Social/OG previews use the 960w WebP, not the multi‑MB upload.
+    const image =
+      originalImage !== DEFAULT_OG ? listingImageSrc(originalImage, 'card') : DEFAULT_OG;
 
     this.apply({
       title:       this.buildListingTitle(rawTitle, listing.category),
@@ -129,7 +132,7 @@ export class SeoService {
     this.setCanonical(canonical);
     this.setListingOgType('product');
     this.injectListingSchema(listing, image, canonical);
-    this.setListingLcpPreload(image);
+    this.setListingLcpPreload(originalImage);
   }
 
   /** Sets title/meta for the blog index page. */
