@@ -46,7 +46,8 @@ const {
 } = require('../services/notificationService');
 const {
   sendOfferPlacedEmail,
-  sendOfferOutbidEmail
+  sendOfferOutbidEmail,
+  sendPlatformNewOfferAlert
 } = require('../services/auctionNotificationService');
 const { sendEmail } = require('../services/emailService');
 const {
@@ -362,6 +363,14 @@ async function createOffer(req, res) {
       }).catch(err => logger.error('Failed to create proposal notification:', err));
       if (io) emitNewNotificationToUser(io, sellerUserId).catch(() => {});
     }
+
+    // Platform ops alert (every offer). Same inbox as new bids.
+    sendPlatformNewOfferAlert(
+      listing,
+      amount,
+      publicName,
+      confirmEmail || null
+    ).catch(err => logger.error('Failed to send platform new-offer alert:', err));
 
     res.status(201).json(formatOfferForSocket(populatedOffer));
 }

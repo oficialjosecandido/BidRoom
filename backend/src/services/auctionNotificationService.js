@@ -401,6 +401,60 @@ async function sendPlatformNewBidAlert(listing, bidAmount, bidderName, bidderEma
 }
 
 /**
+ * Internal ops alert: email platform inbox on every new best-offer proposal.
+ * Recipient: PLATFORM_BID_NOTIFY_EMAIL (default pt.bidnow@gmail.com).
+ */
+async function sendPlatformNewOfferAlert(listing, offerAmount, offererName, offererEmail) {
+  try {
+    const to = (process.env.PLATFORM_BID_NOTIFY_EMAIL || 'pt.bidnow@gmail.com').trim();
+    if (!to) return { sent: false, reason: 'no_recipient' };
+
+    const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:4200';
+    const listingUrl = listing?.slug
+      ? `${frontendUrl}/listing/${listing.slug}`
+      : `${frontendUrl}/nexus/auctions/${listing?._id || ''}`;
+    const nexusUrl = `${frontendUrl}/nexus/auctions/${listing?._id || ''}`;
+    const title = listing?.title || 'Anúncio';
+    const amount = Number(offerAmount || 0).toFixed(2);
+    const offerer = offererName || 'Anónimo';
+    const emailLine = offererEmail ? ` (${offererEmail})` : '';
+    const offerCount = listing?.offerCount ?? '—';
+    const highestOffer = Number(listing?.highestOffer ?? offerAmount ?? 0).toFixed(2);
+
+    const subject = `Nova proposta · €${amount} · ${title}`;
+    const html = `<!DOCTYPE html>
+<html><head><meta charset="utf-8"></head>
+<body style="margin:0;padding:0;background:#f4f4f5;font-family:Arial,Helvetica,sans-serif;color:#1d1d1f">
+  <div style="max-width:560px;margin:24px auto;background:#fff;border-radius:12px;overflow:hidden;border:1px solid #e5e5ea">
+    <div style="background:#0a0a0a;padding:20px 24px;color:#f0ede8">
+      <div style="font-size:12px;letter-spacing:0.08em;color:#c9a84c;text-transform:uppercase;margin-bottom:6px">BidRoom · Alerta</div>
+      <h1 style="margin:0;font-size:20px;font-weight:700">Nova proposta na plataforma</h1>
+    </div>
+    <div style="padding:24px">
+      <p style="margin:0 0 16px;font-size:15px;line-height:1.5">
+        <strong>${offerer}</strong>${emailLine} fez uma proposta de
+        <strong style="color:#8c6b1e">€${amount}</strong>.
+      </p>
+      <table style="width:100%;border-collapse:collapse;font-size:14px;margin-bottom:20px">
+        <tr><td style="padding:8px 0;color:#666;width:40%">Anúncio</td><td style="padding:8px 0;font-weight:600">${title}</td></tr>
+        <tr><td style="padding:8px 0;color:#666">Proposta mais alta</td><td style="padding:8px 0">€${highestOffer}</td></tr>
+        <tr><td style="padding:8px 0;color:#666">Total de propostas</td><td style="padding:8px 0">${offerCount}</td></tr>
+      </table>
+      <a href="${listingUrl}" style="display:inline-block;background:#c9a84c;color:#1a1408;text-decoration:none;padding:12px 20px;border-radius:8px;font-weight:700;font-size:14px;margin-right:8px">Ver anúncio</a>
+      <a href="${nexusUrl}" style="display:inline-block;background:#f0ede8;color:#1d1d1f;text-decoration:none;padding:12px 20px;border-radius:8px;font-weight:600;font-size:14px">Abrir no Nexus</a>
+    </div>
+  </div>
+</body></html>`;
+
+    await sendEmail(to, subject, html);
+    return { sent: true };
+  } catch (error) {
+    logger.error('Error sending platform new-offer alert:', error);
+    return { sent: false, error: error.message };
+  }
+}
+
+/**
  * Send offer confirmation email to the bidder who submitted an offer (best-offer auctions)
  */
 async function sendOfferPlacedEmail(listing, offererEmail, offererName, offerAmount) {
@@ -1625,6 +1679,7 @@ module.exports = {
   sendWinnerNotification,
   sendFirstBidNotification,
   sendPlatformNewBidAlert,
+  sendPlatformNewOfferAlert,
   sendPlatformListingPendingReviewAlert,
   sendOfferPlacedEmail,
   sendOfferOutbidEmail

@@ -133,6 +133,10 @@ export class AdminAuctionDetailsComponent implements OnInit, OnDestroy {
   isCreatingPrivateRoom = false;
   isClosingPrivateRoom = false;
   isDeleting = false;
+  isReviewing = false;
+  showRejectModal = false;
+  rejectReason = '';
+  reviewError: string | null = null;
   isSavingCategory = false;
   error: string | null = null;
   showPlatinumSelection = false;
@@ -428,6 +432,60 @@ export class AdminAuctionDetailsComponent implements OnInit, OnDestroy {
       error: (err) => {
         this.isDeleting = false;
         alert(err?.error?.message || 'Failed to delete listing.');
+      }
+    });
+  }
+
+  approveListing(): void {
+    if (!this.auction || this.isReviewing) return;
+    const ends = this.auction.durationSlot
+      ? ` The auction will run for ${this.auction.durationSlot} from now.`
+      : '';
+    if (!confirm(`Approve "${this.auction.title}"? It goes live immediately.${ends}`)) return;
+
+    this.isReviewing = true;
+    this.reviewError = null;
+    this.adminService.approveListing(this.auctionId).subscribe({
+      next: () => {
+        this.isReviewing = false;
+        this.loadAuctionDetails();
+      },
+      error: (err) => {
+        this.isReviewing = false;
+        this.reviewError = apiErrorMessage(err, 'Failed to approve listing');
+        alert(this.reviewError);
+      }
+    });
+  }
+
+  openRejectModal(): void {
+    this.showRejectModal = true;
+    this.rejectReason = '';
+    this.reviewError = null;
+  }
+
+  closeRejectModal(): void {
+    if (this.isReviewing) return;
+    this.showRejectModal = false;
+    this.rejectReason = '';
+    this.reviewError = null;
+  }
+
+  confirmReject(): void {
+    const reason = this.rejectReason.trim();
+    if (!this.auction || !reason || this.isReviewing) return;
+
+    this.isReviewing = true;
+    this.reviewError = null;
+    this.adminService.rejectListing(this.auctionId, reason).subscribe({
+      next: () => {
+        this.isReviewing = false;
+        this.closeRejectModal();
+        this.loadAuctionDetails();
+      },
+      error: (err) => {
+        this.isReviewing = false;
+        this.reviewError = apiErrorMessage(err, 'Failed to reject listing');
       }
     });
   }

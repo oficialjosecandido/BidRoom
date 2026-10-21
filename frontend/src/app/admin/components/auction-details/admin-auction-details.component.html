@@ -11,13 +11,31 @@
               <h1 class="page-title">{{ auction.title }}</h1>
               <p class="page-lead">Nexus listing · Format {{ auction.auctionFormat }}</p>
             </div>
-            <button
-              type="button"
-              class="delete-listing-btn"
-              [disabled]="isDeleting"
-              (click)="deleteListing()">
-              {{ isDeleting ? 'Deleting…' : 'Delete listing' }}
-            </button>
+            <div class="header-actions">
+              @if (auction.status === 'pending_review') {
+                <button
+                  type="button"
+                  class="approve-listing-btn"
+                  [disabled]="isReviewing"
+                  (click)="approveListing()">
+                  {{ isReviewing ? 'Working…' : 'Approve' }}
+                </button>
+                <button
+                  type="button"
+                  class="reject-listing-btn"
+                  [disabled]="isReviewing"
+                  (click)="openRejectModal()">
+                  Reject
+                </button>
+              }
+              <button
+                type="button"
+                class="delete-listing-btn"
+                [disabled]="isDeleting"
+                (click)="deleteListing()">
+                {{ isDeleting ? 'Deleting…' : 'Delete listing' }}
+              </button>
+            </div>
           </div>
         } @else {
           <h1 class="page-title">Auction details</h1>
@@ -624,6 +642,44 @@
           @if (isCreatingPrivateRoom) {
 <span>Creating...</span>
 }
+        </button>
+      </div>
+    </div>
+  </div>
+}
+
+@if (showRejectModal && auction) {
+  <div class="modal-overlay" (click)="closeRejectModal()">
+    <div class="modal-content" (click)="$event.stopPropagation()">
+      <div class="modal-header">
+        <h2>Reject listing</h2>
+        <button type="button" class="close-btn" (click)="closeRejectModal()" aria-label="Close">×</button>
+      </div>
+      <div class="modal-body">
+        <p class="modal-help">Rejecting: <strong>{{ auction.title }}</strong></p>
+        <label>
+          Reason for the seller
+          <textarea
+            rows="4"
+            [(ngModel)]="rejectReason"
+            placeholder="e.g. The photos are too blurry to identify the item."></textarea>
+        </label>
+        <p class="modal-help">
+          This text is emailed to the seller and shown in their dashboard, in their own language.
+          Write it as the instruction on what to fix.
+        </p>
+        @if (reviewError) {
+          <p class="modal-error">{{ reviewError }}</p>
+        }
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn-secondary" (click)="closeRejectModal()" [disabled]="isReviewing">Cancel</button>
+        <button
+          type="button"
+          class="btn-danger"
+          (click)="confirmReject()"
+          [disabled]="!rejectReason.trim() || isReviewing">
+          {{ isReviewing ? 'Rejecting…' : 'Reject listing' }}
         </button>
       </div>
     </div>
