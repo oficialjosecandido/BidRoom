@@ -210,7 +210,8 @@
         "termsShort": "Terms",
         "privacyShort": "Privacy",
         "allRights": "© 2026 BidRoom.pt · All rights reserved",
-        "madeIn": "Made in Portugal 🇵🇹"
+        "madeIn": "Made in Portugal 🇵🇹",
+        "prohibited": "Prohibited items"
       }
     }
   },
@@ -244,7 +245,8 @@
     "privacyShort": "Privacy",
     "cookies": "Cookies",
     "complaintsBook": "Complaints book",
-    "ral": "Consumer dispute resolution"
+    "ral": "Consumer dispute resolution",
+    "prohibited": "Prohibited items"
   },
   "home": {
     "hero": {
@@ -1109,7 +1111,8 @@
       "offersBadge": "Offers",
       "fixedNote": "You can change this until you publish. After that it stays as it is, because people will have bid or made offers on the terms you set."
     },
-    "formatCommissionNote": "Seller commission is 3.5% for both options. 6% only if you enable Private Room on bidding."
+    "formatCommissionNote": "Seller commission is 3.5% for both options. 6% only if you enable Private Room on bidding.",
+    "prohibitedNote": "Before publishing, check that the item is allowed: see the <a href=\"/landing/prohibited-items\" target=\"_blank\" rel=\"noopener\">Prohibited and Restricted Items Policy</a>. Every listing is reviewed by our team before it becomes visible."
   },
   "listingList": {
     "searchPlaceholder": "Search auctions...",
@@ -3190,7 +3193,7 @@
         "q3": "Can I cancel a listing after publishing?",
         "a3": "Yes, while the listing is a draft, awaiting approval, or active — and only if there are no qualifying bids/offers: for Best Offer, no accepted offer and no pending offer at or above the minimum; for auctions, no bids. Below-minimum pending offers are rejected automatically. You cannot delete a listing that already has a winner or an active transaction.",
         "q4": "What items can I not list?",
-        "a4": "Prohibited: live animals and animal-derived goods (taxidermy, hunting trophies, ivory, horn, bone, real fur, exotic skins, tortoiseshell, mounted insects, protected shells and coral), controlled substances, weapons, and any item illegal in Portugal. Fossils, minerals and meteorites are allowed. BidRoom uses automatic moderation (Azure AI Content Safety) to detect and block these listings before they go live."
+        "a4": "Not allowed, among others: replicas and counterfeits, weapons and ammunition, live animals, ivory and parts of protected species, taxidermy and hunting trophies, human remains, controlled substances, medicines, tobacco and vaping products, identity documents and gift cards. Other items are allowed under conditions — exotic skins with CITES documentation, jewellery with the hallmarks the law requires, antiques with provenance, alcoholic drinks to buyers aged 18 or over only. Fossils, minerals and meteorites are allowed. The full list is in the <a href=\"/landing/prohibited-items\">Prohibited and Restricted Items Policy</a>. Every listing is scanned automatically and approved by a member of our team before it becomes visible."
       },
       "card": {
         "noListingFee": "No listing fee",
@@ -3746,6 +3749,7 @@
       "terms": "Terms of Use",
       "privacy": "Privacy Policy",
       "cookies": "Cookies",
+      "prohibited": "Prohibited items",
       "contact": "Contact"
     },
     "footer": {
@@ -3778,7 +3782,7 @@
       "h5li2": "The description and photographs must be true and complete.",
       "h5li3": "The seller has <strong>5 business days</strong> to ship the item after payment confirmation.",
       "h5li4": "Failure to meet the shipping deadline results in automatic cancellation and a refund to the buyer.",
-      "h5li5": "Prohibited items include: live animals and any animal-derived goods — taxidermy, hunting trophies, ivory, horn, bone, real fur, exotic skins, tortoiseshell, mounted insects, protected shells and coral; controlled substances; weapons; and any item illegal under Portuguese or EU law. Fossils, minerals and meteorites are allowed.",
+      "h5li5": "Some items cannot be sold on BidRoom and others only under conditions. Read the <a href=\"/landing/prohibited-items\">Prohibited and Restricted Items Policy</a> before publishing: it forms part of these Terms.",
       "h5li6": "<strong>Deleting a listing:</strong> the seller may delete (cancel) a listing that is still a draft, awaiting approval, or active, provided that (a) for <strong>Best Offer</strong>, there is no accepted offer and no pending offer at or above the minimum offer price; (b) for <strong>Highest Bid</strong> auctions, there are no bids; and (c) there is no winner and no active transaction. Below-minimum pending offers are automatically rejected when the listing is deleted. Listings that have already sold or have qualifying bids/offers cannot be deleted unilaterally.",
       "h6": "6. Buyer obligations",
       "h6li1": "<strong>Auction bids</strong> are binding from the moment they are placed and <strong>cannot be withdrawn</strong>. By placing a bid, the buyer commits to pay if they win.",
@@ -3820,7 +3824,16 @@
       "h17li3": "If the buyer has a saved payment method: automatic charge of <strong>€30</strong> — <strong>€10 transferred to the seller</strong> and <strong>€20 retained by BidRoom</strong> as a penalty.",
       "h17li4": "A <strong>2/5 review from BidRoom</strong> is automatically added to the buyer's profile.",
       "h17li5": "On the third payment default, the buyer's account is <strong>permanently closed</strong>.",
-      "h17p2": "The financial penalty applies regardless of any reason given by the buyer. By placing a bid or accepting an offer, the user expressly agrees to these terms."
+      "h17p2": "The financial penalty applies regardless of any reason given by the buyer. By placing a bid or accepting an offer, the user expressly agrees to these terms.",
+      "h18": "18. Prohibited and restricted items",
+      "h18p1": "18.1 The User may only list items whose sale is lawful under Portuguese law, under European Union law and under the law of the buyer’s Member State of residence, and which the User owns or is otherwise entitled to dispose of.",
+      "h18p2": "18.2 Listing the items and content identified as prohibited in the <a href=\"/landing/prohibited-items\">Prohibited and Restricted Items Policy</a>, which forms an integral part of these Terms and Conditions, is not permitted. The Policy’s list is illustrative and does not relieve the User of compliance with applicable law.",
+      "h18p3": "18.3 Items identified as restricted may only be listed where the conditions set out in the Policy are met, including the provision, at BidRoom’s request, of documentation evidencing the authenticity, lawful origin or ownership of the item.",
+      "h18p4": "18.4 The selling User is responsible for the legality, authenticity and faithful description of the items they list, and for obtaining any licences, certificates or authorisations required to sell or ship them.",
+      "h18p5": "18.5 BidRoom may, on its own initiative or following a report, refuse, suspend or remove listings, cancel ongoing auctions and the transactions arising from them, and suspend or close accounts, whenever these Terms, the Policy or the law are breached. BidRoom notifies the affected User of the decision and its reasons, in accordance with Regulation (EU) 2022/2065 (Digital Services Act).",
+      "h18p6": "18.6 The User may challenge the decision through the appeal mechanism available in their account, without prejudice to out-of-court dispute resolution and to the courts.",
+      "h18p7": "18.7 BidRoom may report to the competent authorities information concerning listings or conduct that constitutes or indicates an offence, as provided by law.",
+      "h18p8": "18.8 BidRoom may update the Policy at any time. Changes apply to listings published after they take effect, without prejudice to the removal, at any time, of listings for items whose sale is unlawful."
     },
     "privacy": {
       "eyebrow": "Privacy Policy",
@@ -3989,6 +4002,134 @@
       "learnMore": "Learn more",
       "reject": "Reject non-essential",
       "accept": "Accept all"
+    },
+    "prohibited": {
+      "eyebrow": "Listing rules",
+      "title": "Prohibited and restricted items",
+      "updated": "Last updated: 21 October 2026",
+      "intro1": "BidRoom is a marketplace for pieces of value. To protect buyers, sellers and the community itself, some items cannot be sold here and others can only be sold under conditions.",
+      "intro2": "These rules apply to every category and to everything in a listing: title, description and photographs. By publishing, the seller warrants that they own the item (or have the right to sell it) and that the sale is legal in Portugal and in the buyer’s country.",
+      "intro3": "This list is not exhaustive. If selling an item is illegal, it is not allowed on BidRoom even if it is not named here. When in doubt, talk to us before publishing.",
+      "s1": "1. Prohibited items",
+      "s1g1": {
+        "t": "Counterfeits and replicas",
+        "li1": "Replicas, copies, “clones”, “AAA” or “1:1” items, or anything “inspired by” another brand, <strong>even when the listing says plainly that it is a replica</strong>.",
+        "li2": "Any item carrying the name, logo or design of a brand without being authentic.",
+        "note": "Authentic pieces with non-original components are allowed, as long as the listing says so (see section 2)."
+      },
+      "s1g2": {
+        "t": "Weapons and ammunition",
+        "li1": "Firearms of any kind, including antique, deactivated, blank-firing, air-powered, airsoft and replica guns.",
+        "li2": "Ammunition, cartridges, magazines, silencers, sights and other firearm parts or accessories.",
+        "li3": "Bladed and collector weapons: flick knives, knuckledusters, disguised weapons, swords, sabres, daggers and bayonets.",
+        "li4": "Electric weapons (tasers) and defence sprays.",
+        "note": "Cutlery, kitchen knives and tools are allowed."
+      },
+      "s1g3": {
+        "t": "Explosives and hazardous materials",
+        "li1": "Explosives, fireworks and other pyrotechnics.",
+        "li2": "Hazardous chemicals, toxic or radioactive substances and compressed gases."
+      },
+      "s1g4": {
+        "t": "Drugs, medicines and tobacco",
+        "li1": "Narcotics and psychoactive substances, and the equipment to consume or produce them.",
+        "li2": "Medicines, prescription or otherwise, and used medical devices.",
+        "li3": "Tobacco, e-cigarettes, e-liquids and other vaping products.",
+        "note": "Tobacco-related collectibles — snuff boxes, cigarette cases, humidors, lighters and vintage advertising — are allowed, because they are objects rather than tobacco."
+      },
+      "s1g5": {
+        "t": "Animals and protected species",
+        "li1": "Live animals.",
+        "li2": "<strong>Ivory, of any origin and any age</strong>, including antique pieces with a certificate. Also rhinoceros horn, tortoiseshell and sperm whale, hippopotamus or walrus teeth.",
+        "li3": "Taxidermy and the skin, feathers, bone or any other part of a protected species.",
+        "li4": "Plants of protected species."
+      },
+      "s1g6": {
+        "t": "Human remains",
+        "li1": "Bones, skulls, organs, tissue or any human remains."
+      },
+      "s1g7": {
+        "t": "Stolen items and items the seller has no right to sell",
+        "li1": "Stolen, lost or found items.",
+        "li2": "Items the seller has no right to sell: borrowed, leased, pledged or subject to retention of title.",
+        "li3": "Archaeological finds and classified cultural property without proof of lawful origin, including metal-detector finds."
+      },
+      "s1g8": {
+        "t": "Documents, money and financial products",
+        "li1": "Identity documents, passports, driving licences and vehicle registration plates.",
+        "li2": "Current uniforms, badges and insignia of police, security forces and emergency services.",
+        "li3": "Counterfeit notes and coins. <em>Authentic numismatics are allowed.</em>",
+        "li4": "Gift cards, vouchers, event tickets, lottery tickets, shares, securities and cryptocurrency.",
+        "li5": "Accounts, subscriptions, databases and personal data."
+      },
+      "s1g9": {
+        "t": "Other items and content we do not accept",
+        "li1": "Items promoting hatred or violence, including Nazi or terrorist-organisation objects and symbols.",
+        "li2": "Sexually explicit content and adult items.",
+        "li3": "Services, digital products and anything that is not a physical item.",
+        "li4": "Dangerous products, products subject to a recall, or products that do not meet European Union safety rules."
+      },
+      "s2": "2. Items allowed under conditions",
+      "s2p1": "These items can be sold on BidRoom if the listing meets the conditions below. Our team may ask for documents before or after publication.",
+      "s2g1": {
+        "t": "Watches, jewellery and branded goods",
+        "li1": "Authentic items only. The seller is responsible for the authenticity of what they sell.",
+        "li2": "The listing must disclose non-original components (dial, hands, crown, bracelet, movement, replacement parts), polishing or other work.",
+        "li3": "BidRoom may request proof of authenticity or provenance at any time, before or after the sale."
+      },
+      "s2g2": {
+        "t": "Precious metal jewellery and gemstones",
+        "li1": "State the metal and its fineness (for example, 19.2 carat gold / 800‰).",
+        "li2": "Items sold as gold, silver or platinum must carry the hallmarks the law requires.",
+        "li3": "Stones: state whether they are natural, synthetic or treated, and whether a certificate exists."
+      },
+      "s2g3": {
+        "t": "Exotic skin goods (crocodile, python, lizard and other protected species)",
+        "li1": "Only with CITES documentation proving the lawful origin of the piece. BidRoom may ask for it before publication."
+      },
+      "s2g4": {
+        "t": "Antiques and art",
+        "li1": "Attribute a work to an artist only if you can demonstrate it. Otherwise use “attributed to”, “school of” or “in the manner of”.",
+        "li2": "Some cultural goods need an export authorisation to leave Portugal. If the buyer is abroad, it is the seller who confirms they may ship."
+      },
+      "s2g5": {
+        "t": "Alcoholic drinks",
+        "li1": "Sales are permitted to buyers aged 18 or over only. The buyer may have to confirm their age before completing the purchase.",
+        "li2": "Shipping must go through a carrier that accepts alcoholic drinks. It is the seller who confirms they may ship to the buyer’s country.",
+        "li3": "The listing must state the producer, the year, the volume, the alcohol content and the condition of the bottle, label and capsule."
+      },
+      "s2g6": {
+        "t": "Electronics",
+        "li1": "Devices must carry no account locks (iCloud, Google, carrier) and no blocked IMEI, and any faults must be described."
+      },
+      "s2g7": {
+        "t": "Perfume and cosmetics",
+        "li1": "New and unopened only."
+      },
+      "s2g8": {
+        "t": "Vehicles",
+        "li1": "Subject to their own seller-identification and documentation rules, shown while creating the listing."
+      },
+      "s2g9": {
+        "t": "High-value items",
+        "li1": "Sales above €5,000 require identity verification under anti-money-laundering law.",
+        "li2": "High-value listings may be reviewed in more detail before being published."
+      },
+      "s3": "3. Rules for listings",
+      "s3li1": "<strong>Real photographs</strong> of the item you are selling (not catalogue images), showing its condition and its flaws.",
+      "s3li2": "<strong>An honest description</strong>: condition, flaws, provenance, non-original components, repairs.",
+      "s3li3": "<strong>No contact details outside the platform</strong>: no phone numbers, emails, social media or links to other sites, and no offers to pay outside BidRoom. <em>Serial numbers and item references are allowed.</em>",
+      "s3li4": "<strong>No misleading wording</strong>: do not invoke a brand the item is not (for example, “Rolex type” or “Cartier style”).",
+      "s3li5": "<strong>The correct category and price.</strong>",
+      "s4": "4. What happens if a listing breaks these rules",
+      "s4p1": "Every listing is scanned automatically and approved by a member of our team before it becomes visible. If a later edit introduces something that may fall under these rules, the listing returns to review and stops being visible until it is approved again.",
+      "s4li1": "<strong>An honest mistake</strong> (a phone number in the description, say): the listing is paused and we tell you what to correct. Once corrected, it becomes visible again.",
+      "s4li2": "<strong>A prohibited item</strong>: the listing is removed and the auction, if running, is cancelled. We always tell you which rule applied and why.",
+      "s4li3": "<strong>Repeated or serious breaches</strong>: the account may be suspended or closed.",
+      "s4li4": "<strong>Illegal items</strong>: we may report the matter to the competent authorities.",
+      "s4p2": "If you disagree with a decision, you can challenge it in your account, under <strong>My account</strong>, or write to us at <a href=\"mailto:contact@bidroom.pt\">contact@bidroom.pt</a>. We answer with a reasoned decision.",
+      "s5": "5. Reporting a listing",
+      "s5p1": "If you see a listing that breaks these rules, use the <strong>Report</strong> button on the listing page or write to us at <a href=\"mailto:contact@bidroom.pt\">contact@bidroom.pt</a>. Tell us which listing and why. We review every report, and the identity of the person reporting is not shared with the seller."
     }
   },
   "privateRoomAuction": {

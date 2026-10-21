@@ -1,4 +1,5 @@
-import { Component, OnInit, inject, signal } from '@angular/core';
+import { Component, OnInit, PLATFORM_ID, inject, signal } from '@angular/core';
+import { isPlatformBrowser } from '@angular/common';
 import { NavigationEnd, Router, RouterOutlet } from '@angular/router';
 import { filter } from 'rxjs/operators';
 import { LanguageService } from './shared/services/language.service';
@@ -16,6 +17,8 @@ import { AnalyticsService } from './shared/services/analytics.service';
 })
 export class App implements OnInit {
   protected readonly title = signal('frontend');
+  /** Cookie/PWA/chat chrome is client-only — keeps SSR HTML smaller and off the LCP path. */
+  protected readonly isBrowser = isPlatformBrowser(inject(PLATFORM_ID));
   private language = inject(LanguageService);
   /** Bootstraps GA in production when analytics cookies are accepted */
   private readonly _analytics = inject(AnalyticsService);

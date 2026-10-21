@@ -2147,21 +2147,40 @@ router.patch('/:id', authenticateToken, requireActiveAccount, async (req, res) =
         logger.error('Azure Content Safety text scan error (non-blocking):', aiErr.message);
       }
 
-      // An edit can introduce what the original draft did not, so record the
-      // flag here too. It does not change status: an already-approved listing
-      // stays live, and the mark is there for the reviewer who looks next.
+      // An edit can introduce what the original draft did not: publish a clean
+      // description, get approved, then add the ivory. So a policy area the
+      // listing was not already flagged for sends it back to pending_review —
+      // out of public view until a reviewer looks again. Areas already on the
+      // record do not: the reviewer saw them and approved anyway, and
+      // re-queueing on every later typo fix would be friction for nothing.
       const policyScanUpdate = scanTextsForPolicyFlags(textFields);
       if (policyScanUpdate.flagged) {
+        const alreadyFlagged = listing.moderationWarning?.policyCategories || [];
+        const newlyFlagged = policyScanUpdate.categories.filter(c => !alreadyFlagged.includes(c));
         updates.moderationWarning = {
           severity: 'high',
           policyCategories: policyScanUpdate.categories,
           message: 'This listing may fall under our prohibited and restricted items policy and is awaiting a check by our team.',
           flaggedAt: new Date()
         };
+        if (newlyFlagged.length > 0 && listing.status === 'active') {
+          updates.status = 'pending_review';
+          listingContentWarning = {
+            severity: 'high',
+            policyCategories: policyScanUpdate.categories,
+            message: 'Your edit put this listing back under review, so it is hidden from buyers until our team approves it again. This happens when the new text may fall under our prohibited and restricted items policy. If the item is permitted, having the paperwork ready (authenticity, provenance or CITES documents) will speed this up.'
+          };
+        }
         appendModerationAudit({
           subjectUserId: user._id,
           actionType: 'policy_category_flagged',
-          metadata: { context: 'listing_update', categories: policyScanUpdate.categories, listingId: listing._id }
+          metadata: {
+            context: 'listing_update',
+            categories: policyScanUpdate.categories,
+            newCategories: newlyFlagged,
+            requeuedForReview: updates.status === 'pending_review',
+            listingId: listing._id
+          }
         }).catch(() => {});
       }
 
@@ -2187,8 +2206,9 @@ router.patch('/:id', authenticateToken, requireActiveAccount, async (req, res) =
           }).catch(() => {});
           return res.status(400).json({ error: 'Content policy violation', message: violation.message, violationAction: violation.action });
         }
-        // low: allow through but warn the user and log for admin review
-        listingContentWarning = {
+        // low: allow through but warn the user and log for admin review.
+        // A policy flag is already the more serious note, so it is not overwritten.
+        listingContentWarning = listingContentWarning || {
           severity: 'low',
           message: 'Your listing was saved, but it contains mild language that may be reviewed by our moderation team. Please keep your listings professional.'
         };

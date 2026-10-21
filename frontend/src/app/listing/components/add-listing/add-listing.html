@@ -1015,6 +1015,12 @@
           @if (getFieldError('sellerDeclaration')) {
             <div class="field-err" style="margin-top:8px">{{ getFieldError('sellerDeclaration') }}</div>
           }
+          <!--
+            The prohibited-items policy binds through clause 18 of the Terms, so
+            it belongs next to the declaration the seller is signing, not only in
+            the footer where nobody reads it before publishing.
+          -->
+          <p class="decl-note" [innerHTML]="'addListing.prohibitedNote' | translate"></p>
         </div>
 
         <!--

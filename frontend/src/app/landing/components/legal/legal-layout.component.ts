@@ -5,7 +5,7 @@ import { LanguageService } from '../../../shared/services/language.service';
 import { ThemeService } from '../../../shared/services/theme.service';
 import { BidroomLogoComponent } from '../../../shared/components/bidroom-logo/bidroom-logo.component';
 
-export type LegalTab = 'terms' | 'privacy' | 'cookies' | 'contact';
+export type LegalTab = 'terms' | 'privacy' | 'cookies' | 'prohibited' | 'contact';
 
 @Component({
   selector: 'app-legal-layout',

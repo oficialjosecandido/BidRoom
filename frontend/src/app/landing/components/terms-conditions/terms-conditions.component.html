@@ -57,7 +57,7 @@
         <li>{{ 'legal.terms.h5li2' | translate }}</li>
         <li [innerHTML]="'legal.terms.h5li3' | translate"></li>
         <li>{{ 'legal.terms.h5li4' | translate }}</li>
-        <li>{{ 'legal.terms.h5li5' | translate }}</li>
+        <li [innerHTML]="'legal.terms.h5li5' | translate"></li>
         <li [innerHTML]="'legal.terms.h5li6' | translate"></li>
       </ul>
 
@@ -121,6 +121,18 @@
         <li [innerHTML]="'legal.terms.h17li5' | translate"></li>
       </ul>
       <p [innerHTML]="'legal.terms.h17p2' | translate"></p>
+
+      <!-- Incorporates the prohibited-items policy by reference, so the page at
+           /landing/prohibited-items is part of these Terms. Keep the two in step. -->
+      <h2>{{ 'legal.terms.h18' | translate }}</h2>
+      <p>{{ 'legal.terms.h18p1' | translate }}</p>
+      <p [innerHTML]="'legal.terms.h18p2' | translate"></p>
+      <p>{{ 'legal.terms.h18p3' | translate }}</p>
+      <p>{{ 'legal.terms.h18p4' | translate }}</p>
+      <p>{{ 'legal.terms.h18p5' | translate }}</p>
+      <p>{{ 'legal.terms.h18p6' | translate }}</p>
+      <p>{{ 'legal.terms.h18p7' | translate }}</p>
+      <p>{{ 'legal.terms.h18p8' | translate }}</p>
     </div>
   </div>
 </app-legal-layout>

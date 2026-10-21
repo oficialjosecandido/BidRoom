@@ -37,6 +37,10 @@ export const landingRoutes: Routes = [
     loadComponent: () => import('./components/cookies-policy/cookies-policy.component').then(m => m.CookiesPolicyComponent)
   },
   {
+    path: 'prohibited-items',
+    loadComponent: () => import('./components/prohibited-items/prohibited-items.component').then(m => m.ProhibitedItemsComponent)
+  },
+  {
     path: 'terms-conditions',
     loadComponent: () => import('./components/terms-conditions/terms-conditions.component').then(m => m.TermsConditionsComponent)
   },

@@ -1,6 +1,6 @@
 import {
   Component, OnDestroy, OnInit, AfterViewInit, inject, ElementRef, ViewChild,
-  ChangeDetectorRef, NgZone, PLATFORM_ID, computed
+  ChangeDetectorRef, NgZone, PLATFORM_ID, TransferState, makeStateKey, computed
 } from '@angular/core';
 import { isPlatformBrowser } from '@angular/common';
 import { Router, RouterLink } from '@angular/router';
@@ -22,6 +22,8 @@ const HERO_IMG_SIZES = 'min(380px, 78vw)';
 /** Three-column grid collapses to 1fr under 900px. */
 const GRID_IMG_SIZES = '(max-width: 900px) 100vw, 33vw';
 
+const FEATURED_KEY = makeStateKey<Listing[]>('home:featured');
+
 @Component({
   selector: 'app-home',
   standalone: true,
@@ -37,6 +39,7 @@ export class HomeComponent implements OnInit, AfterViewInit, OnDestroy {
   private seo = inject(SeoService);
   private zone = inject(NgZone);
   private cdr = inject(ChangeDetectorRef);
+  private transferState = inject(TransferState);
   private readonly isBrowser = isPlatformBrowser(inject(PLATFORM_ID));
 
   @ViewChild('carouselWrap') carouselWrap?: ElementRef<HTMLElement>;
@@ -89,13 +92,32 @@ export class HomeComponent implements OnInit, AfterViewInit, OnDestroy {
   }
 
   ngOnInit(): void {
-    this.seo.setPage({
-      title: this.translate.instant('seoPages.home.titleTag'),
-      description: this.translate.instant('seoPages.home.description'),
-      path: '/',
+    const cached = this.transferState.get(FEATURED_KEY, null);
+    if (cached?.length) {
+      this.transferState.remove(FEATURED_KEY);
+      this.featuredListings = cached;
+      this.featuredLoading = false;
+      this.seo.setHomeLcpPreload(cached[0]?.images?.[0] || null);
+    } else {
+      this.loadFeaturedListings();
+    }
+
+    // Wait for i18n — instant() during SSR returned raw keys in <title>.
+    // setPage clears LCP preload, so re-apply after if featured is already known.
+    this.translate.get(['seoPages.home.titleTag', 'seoPages.home.description']).subscribe(t => {
+      this.seo.setPage({
+        title: t['seoPages.home.titleTag'],
+        description: t['seoPages.home.description'],
+        path: '/',
+      });
+      const hero = this.featuredListings[0]?.images?.[0];
+      if (hero) this.seo.setHomeLcpPreload(hero);
     });
-    this.loadFeaturedListings();
-    this.loadActiveListings();
+
+    // Below-the-fold (@defer on viewport) — skip on SSR so whenStable() is faster.
+    if (this.isBrowser) {
+      this.loadActiveListings();
+    }
   }
 
   ngAfterViewInit(): void {
@@ -120,23 +142,14 @@ export class HomeComponent implements OnInit, AfterViewInit, OnDestroy {
         this.featuredListings = res.listings;
         if (this.featuredListings.length === 0) {
           this.listingsService.getListings({ status: 'active', limit: 5, sort: 'deadline' }).subscribe({
-            next: r => {
-              this.featuredListings = r.listings;
-              this.featuredLoading = false;
-              this.carouselCurrent = 0;
-              this.cdr.markForCheck();
-              if (this.isBrowser) queueMicrotask(() => this.scrollToSlide(0, false));
-            },
+            next: r => this.applyFeatured(r.listings),
             error: () => {
               this.featuredLoading = false;
               this.cdr.markForCheck();
             }
           });
         } else {
-          this.featuredLoading = false;
-          this.carouselCurrent = 0;
-          this.cdr.markForCheck();
-          if (this.isBrowser) queueMicrotask(() => this.scrollToSlide(0, false));
+          this.applyFeatured(this.featuredListings);
         }
       },
       error: () => {
@@ -144,6 +157,18 @@ export class HomeComponent implements OnInit, AfterViewInit, OnDestroy {
         this.cdr.markForCheck();
       }
     });
+  }
+
+  private applyFeatured(listings: Listing[]): void {
+    this.featuredListings = listings;
+    this.featuredLoading = false;
+    this.carouselCurrent = 0;
+    this.seo.setHomeLcpPreload(listings[0]?.images?.[0] || null);
+    if (!this.isBrowser && listings.length) {
+      this.transferState.set(FEATURED_KEY, listings);
+    }
+    this.cdr.markForCheck();
+    if (this.isBrowser) queueMicrotask(() => this.scrollToSlide(0, false));
   }
 
   private loadActiveListings(): void {

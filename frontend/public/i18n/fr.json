@@ -131,7 +131,8 @@
         "cookies": "Cookies",
         "contact": "Contact",
         "allRights": "© 2026 BidRoom.pt · Tous droits réservés",
-        "madeIn": "Fabriqué au Portugal 🇵🇹"
+        "madeIn": "Fabriqué au Portugal 🇵🇹",
+        "prohibited": "Articles interdits"
       }
     }
   },
@@ -165,7 +166,8 @@
     "privacyShort": "Confidentialité",
     "cookies": "Cookies",
     "complaintsBook": "Livre de réclamations",
-    "ral": "Règlement des litiges de consommation"
+    "ral": "Règlement des litiges de consommation",
+    "prohibited": "Articles interdits"
   },
   "home": {
     "hero": {
@@ -1043,7 +1045,8 @@
       "Holiday Homes": "Maisons de Vacances",
       "Other Real Estate": "Autres Biens Immobiliers"
     },
-    "formatCommissionNote": "La commission vendeur est de 3,5 % pour les deux options. 6 % uniquement si vous activez la Private Room sur les enchères."
+    "formatCommissionNote": "La commission vendeur est de 3,5 % pour les deux options. 6 % uniquement si vous activez la Private Room sur les enchères.",
+    "prohibitedNote": "Avant de publier, vérifiez que l’article est autorisé : consultez la <a href=\"/landing/prohibited-items\" target=\"_blank\" rel=\"noopener\">Politique relative aux articles interdits et restreints</a>. Toutes les annonces sont examinées par notre équipe avant d’être visibles."
   },
   "listingList": {
     "searchPlaceholder": "Rechercher des enchères...",
@@ -3261,7 +3264,7 @@
         "q3": "Puis-je annuler une annonce après la publication ?",
         "a3": "Oui, tant que l'annonce est un brouillon, en attente d'approbation ou active — et seulement s'il n'y a rien de qualifiant dessus : en mode propositions, aucune proposition acceptée et aucune proposition en attente égale ou supérieure au minimum ; en mode enchères, aucune enchère. Les propositions en attente inférieures au minimum sont refusées automatiquement. Vous ne pouvez pas supprimer une annonce qui a déjà un gagnant ou une transaction active.",
         "q4": "Quels articles ne puis-je pas mettre en vente ?",
-        "a4": "Interdits : les animaux vivants et les biens d'origine animale (taxidermie, trophées de chasse, ivoire, corne, os, fourrure naturelle, peaux exotiques, écaille de tortue, insectes montés, coquillages protégés et corail), les substances réglementées, les armes, et tout article illégal au Portugal. Les fossiles, minéraux et météorites sont autorisés. BidRoom utilise une modération automatique (Azure AI Content Safety) pour détecter et bloquer ces annonces avant leur mise en ligne."
+        "a4": "Ne sont pas autorisés, entre autres : les répliques et contrefaçons, les armes et munitions, les animaux vivants, l’ivoire et les parties d’espèces protégées, la taxidermie et les trophées de chasse, les restes humains, les substances réglementées, les médicaments, le tabac et les produits de vapotage, les documents d’identité et les cartes cadeaux. D’autres articles sont autorisés sous conditions : peaux exotiques avec documentation CITES, bijoux portant les poinçons légalement exigés, antiquités avec provenance, boissons alcoolisées réservées aux personnes de 18 ans ou plus. Les fossiles, minéraux et météorites sont autorisés. La liste complète figure dans la <a href=\"/landing/prohibited-items\">Politique relative aux articles interdits et restreints</a>. Toutes les annonces sont vérifiées automatiquement et approuvées par une personne de l’équipe avant d’être visibles."
       },
       "card": {
         "noListingFee": "Aucun frais de mise en vente",
@@ -4794,10 +4797,154 @@
     },
     "terms": {
       "updated": "Dernière mise à jour : 21 octobre 2026",
-      "h5li5": "Les articles interdits comprennent : les animaux vivants et tout bien d'origine animale — taxidermie, trophées de chasse, ivoire, corne, os, fourrure naturelle, peaux exotiques, écaille de tortue, insectes montés, coquillages protégés et corail ; les substances réglementées ; les armes ; et tout article illégal au regard du droit portugais ou européen. Les fossiles, minéraux et météorites sont autorisés."
+      "h5li5": "Certains articles ne peuvent pas être vendus sur BidRoom et d’autres seulement sous conditions. Consultez la <a href=\"/landing/prohibited-items\">Politique relative aux articles interdits et restreints</a> avant de publier : elle fait partie intégrante des présentes Conditions.",
+      "h18": "18. Articles interdits et restreints",
+      "h18p1": "18.1 L’Utilisateur ne peut mettre en vente que des articles dont la vente est licite au regard du droit portugais, du droit de l’Union européenne et du droit de l’État membre de résidence de l’acheteur, et dont il est propriétaire ou qu’il a qualité pour céder.",
+      "h18p2": "18.2 Il est interdit de mettre en vente les articles et contenus identifiés comme interdits dans la <a href=\"/landing/prohibited-items\">Politique relative aux articles interdits et restreints</a>, qui fait partie intégrante des présentes Conditions générales. L’énumération de la Politique est indicative et ne dispense pas du respect de la loi applicable.",
+      "h18p3": "18.3 Les articles identifiés comme restreints ne peuvent être mis en vente que si les conditions prévues par la Politique sont remplies, y compris la présentation, à la demande de BidRoom, de documents attestant l’authenticité, l’origine légale ou la propriété de l’article.",
+      "h18p4": "18.4 Il incombe à l’Utilisateur vendeur d’assurer la légalité, l’authenticité et la description fidèle des articles qu’il met en vente, ainsi que d’obtenir les licences, certificats ou autorisations exigés pour leur vente ou leur expédition.",
+      "h18p5": "18.5 BidRoom peut, de sa propre initiative ou à la suite d’un signalement, refuser, suspendre ou retirer des annonces, annuler les enchères en cours et les transactions qui en résultent, et suspendre ou fermer des comptes, en cas de violation des présentes Conditions, de la Politique ou de la loi. BidRoom communique à l’Utilisateur concerné la décision et sa motivation, conformément au règlement (UE) 2022/2065 (règlement sur les services numériques).",
+      "h18p6": "18.6 L’Utilisateur peut contester la décision au moyen du mécanisme de recours disponible dans son compte, sans préjudice du recours aux modes de règlement extrajudiciaire des litiges et aux tribunaux.",
+      "h18p7": "18.7 BidRoom peut communiquer aux autorités compétentes toute information relative à des annonces ou à des comportements qui constituent ou laissent présumer une infraction, dans les conditions prévues par la loi.",
+      "h18p8": "18.8 BidRoom peut mettre à jour la Politique à tout moment. Les modifications s’appliquent aux annonces publiées après leur entrée en vigueur, sans préjudice du retrait, à tout moment, des annonces portant sur des articles dont la vente est illicite."
     },
     "privacy": {
       "updated": "Dernière mise à jour : 21 octobre 2026 · Conforme au RGPD"
+    },
+    "prohibited": {
+      "eyebrow": "Règles de publication",
+      "title": "Articles interdits et restreints",
+      "updated": "Dernière mise à jour : 21 octobre 2026",
+      "intro1": "BidRoom est une place de marché de pièces de valeur. Pour protéger les acheteurs, les vendeurs et la communauté elle-même, certains articles ne peuvent pas être vendus ici et d’autres ne peuvent l’être que sous conditions.",
+      "intro2": "Ces règles s’appliquent à toutes les catégories et à tout le contenu d’une annonce : titre, description et photographies. En publiant, le vendeur garantit qu’il est propriétaire de l’article (ou qu’il a le droit de le vendre) et que la vente est légale au Portugal et dans le pays de l’acheteur.",
+      "intro3": "Cette liste n’est pas exhaustive. Si la vente d’un article est illégale, elle n’est pas autorisée sur BidRoom, même si l’article n’est pas mentionné ici. En cas de doute, contactez-nous avant de publier.",
+      "s1": "1. Articles interdits",
+      "s1g1": {
+        "t": "Contrefaçons et répliques",
+        "li1": "Répliques, copies, « clones », articles « AAA », « 1:1 » ou « inspirés de » une autre marque, <strong>même si l’annonce indique clairement qu’il s’agit d’une réplique</strong>.",
+        "li2": "Tout article portant le nom, le logo ou le design d’une marque sans être authentique.",
+        "note": "Les pièces authentiques comportant des composants non originaux sont autorisées, à condition que l’annonce le précise (voir la section 2)."
+      },
+      "s1g2": {
+        "t": "Armes et munitions",
+        "li1": "Armes à feu de tout type, y compris anciennes, neutralisées, d’alarme, à air comprimé, airsoft et répliques.",
+        "li2": "Munitions, cartouches, chargeurs, silencieux, lunettes de visée et autres pièces ou accessoires d’armes.",
+        "li3": "Armes blanches et armes de collection : couteaux à cran d’arrêt, poings américains, armes dissimulées, épées, sabres, poignards et baïonnettes.",
+        "li4": "Armes électriques (tasers) et aérosols de défense.",
+        "note": "Les couverts, les couteaux de cuisine et les outils sont autorisés."
+      },
+      "s1g3": {
+        "t": "Explosifs et matières dangereuses",
+        "li1": "Explosifs, feux d’artifice et autres articles pyrotechniques.",
+        "li2": "Produits chimiques dangereux, substances toxiques ou radioactives et gaz comprimés."
+      },
+      "s1g4": {
+        "t": "Drogues, médicaments et tabac",
+        "li1": "Stupéfiants et substances psychoactives, ainsi que le matériel servant à les consommer ou à les produire.",
+        "li2": "Médicaments, avec ou sans ordonnance, et dispositifs médicaux usagés.",
+        "li3": "Tabac, cigarettes électroniques, liquides et autres produits de vapotage.",
+        "note": "Les objets de collection liés au tabac — tabatières, étuis à cigarettes, caves à cigares, briquets et affiches anciennes — sont autorisés, car ce sont des objets et non du tabac."
+      },
+      "s1g5": {
+        "t": "Animaux et espèces protégées",
+        "li1": "Animaux vivants.",
+        "li2": "<strong>L’ivoire, quelle que soit son origine et son ancienneté</strong>, y compris les pièces anciennes avec certificat. Également la corne de rhinocéros, l’écaille de tortue et les dents de cachalot, d’hippopotame ou de morse.",
+        "li3": "Animaux empaillés et peaux, plumes, os ou autres parties d’espèces protégées.",
+        "li4": "Plantes d’espèces protégées."
+      },
+      "s1g6": {
+        "t": "Restes humains",
+        "li1": "Os, crânes, organes, tissus ou tous restes humains."
+      },
+      "s1g7": {
+        "t": "Articles volés ou sans droit de vente",
+        "li1": "Articles volés, perdus ou trouvés.",
+        "li2": "Articles que le vendeur n’a pas le droit de vendre : prêtés, en leasing, gagés ou soumis à une réserve de propriété.",
+        "li3": "Découvertes archéologiques et biens du patrimoine culturel classé sans preuve de leur origine légale, y compris les trouvailles de détecteur de métaux."
+      },
+      "s1g8": {
+        "t": "Documents, argent et produits financiers",
+        "li1": "Documents d’identité, passeports, permis de conduire et plaques d’immatriculation.",
+        "li2": "Uniformes, écussons et insignes actuels des forces de sécurité et des services de secours.",
+        "li3": "Faux billets et fausses pièces. <em>La numismatique authentique est autorisée.</em>",
+        "li4": "Cartes cadeaux, bons, billets de spectacle, billets de loterie, actions, titres et cryptomonnaies.",
+        "li5": "Comptes, abonnements, bases de données et données personnelles."
+      },
+      "s1g9": {
+        "t": "Autres articles et contenus non acceptés",
+        "li1": "Articles faisant la promotion de la haine ou de la violence, y compris les objets et symboles nazis ou d’organisations terroristes.",
+        "li2": "Contenu sexuellement explicite et articles pour adultes.",
+        "li3": "Services, produits numériques et tout ce qui n’est pas un article physique.",
+        "li4": "Produits dangereux, faisant l’objet d’un rappel (<em>recall</em>) ou non conformes aux règles de sécurité de l’Union européenne."
+      },
+      "s2": "2. Articles autorisés sous conditions",
+      "s2p1": "Ces articles peuvent être vendus sur BidRoom si l’annonce respecte les conditions ci-dessous. L’équipe peut demander des documents avant ou après la publication.",
+      "s2g1": {
+        "t": "Montres, bijoux et articles de marque",
+        "li1": "Articles authentiques uniquement. Le vendeur est responsable de l’authenticité de ce qu’il vend.",
+        "li2": "L’annonce doit indiquer la présence de composants non originaux (cadran, aiguilles, couronne, bracelet, mouvement, pièces de remplacement), de polissages ou d’interventions.",
+        "li3": "BidRoom peut demander une preuve d’authenticité ou d’origine à tout moment, avant ou après la vente."
+      },
+      "s2g2": {
+        "t": "Bijoux en métaux précieux et pierres",
+        "li1": "Indiquez le métal et son titre (par exemple, or 19,2 carats / 800‰).",
+        "li2": "Les pièces vendues comme or, argent ou platine doivent porter les poinçons légalement exigés.",
+        "li3": "Pierres : indiquez si elles sont naturelles, synthétiques ou traitées, et s’il existe un certificat."
+      },
+      "s2g3": {
+        "t": "Articles en peau d’espèces exotiques (crocodile, python, lézard et autres espèces protégées)",
+        "li1": "Uniquement avec la documentation CITES prouvant l’origine légale de la pièce. BidRoom peut la demander avant la publication."
+      },
+      "s2g4": {
+        "t": "Antiquités et art",
+        "li1": "N’attribuez une œuvre à un auteur que si vous pouvez le démontrer. Sinon, utilisez « attribué à », « école de » ou « à la manière de ».",
+        "li2": "Certains biens culturels nécessitent une autorisation pour quitter le Portugal. Si l’acheteur est à l’étranger, c’est au vendeur de confirmer qu’il peut expédier."
+      },
+      "s2g5": {
+        "t": "Boissons alcoolisées",
+        "li1": "La vente n’est autorisée qu’aux personnes de 18 ans ou plus. L’acheteur peut devoir confirmer son âge avant de finaliser l’achat.",
+        "li2": "L’expédition doit passer par un transporteur qui accepte les boissons alcoolisées. C’est au vendeur de confirmer qu’il peut expédier vers le pays de l’acheteur.",
+        "li3": "L’annonce doit indiquer le producteur, l’année, le volume, le degré d’alcool et l’état de la bouteille, de l’étiquette et de la capsule."
+      },
+      "s2g6": {
+        "t": "Électronique",
+        "li1": "Les appareils ne doivent comporter aucun verrouillage de compte (iCloud, Google, opérateur) ni IMEI bloqué, et leurs défauts doivent être décrits."
+      },
+      "s2g7": {
+        "t": "Parfums et cosmétiques",
+        "li1": "Neufs et non ouverts uniquement."
+      },
+      "s2g8": {
+        "t": "Véhicules",
+        "li1": "Soumis à des règles propres d’identification du vendeur et de documentation, présentées lors de la création de l’annonce."
+      },
+      "s2g9": {
+        "t": "Articles de valeur élevée",
+        "li1": "Pour les ventes supérieures à 5 000 €, la vérification d’identité est obligatoire, conformément à la loi de prévention du blanchiment de capitaux.",
+        "li2": "Les annonces de valeur élevée peuvent être examinées plus en détail avant publication."
+      },
+      "s3": "3. Règles pour les annonces",
+      "s3li1": "<strong>Des photographies réelles</strong> de l’article que vous vendez (pas des images de catalogue), montrant son état et ses défauts.",
+      "s3li2": "<strong>Une description honnête</strong> : état, défauts, origine, composants non originaux, réparations.",
+      "s3li3": "<strong>Aucun contact hors de la plateforme</strong> : ni téléphone, ni e-mail, ni réseaux sociaux, ni liens vers d’autres sites, et aucune proposition de paiement en dehors. <em>Les numéros de série et les références de l’article sont autorisés.</em>",
+      "s3li4": "<strong>Aucun terme trompeur</strong> : n’invoquez pas une marque que l’article n’est pas (par exemple, « type Rolex » ou « style Cartier »).",
+      "s3li5": "<strong>La bonne catégorie et le bon prix.</strong>",
+      "s4": "4. Ce qui se passe si une annonce ne respecte pas ces règles",
+      "s4p1": "Toutes les annonces sont vérifiées automatiquement et approuvées par une personne de l’équipe avant d’être visibles. Si une modification ultérieure introduit un élément susceptible de relever de ces règles, l’annonce repasse en révision et cesse d’être visible jusqu’à une nouvelle approbation.",
+      "s4li1": "<strong>Erreur de bonne foi</strong> (un numéro de téléphone dans la description, par exemple) : l’annonce est mise en pause et nous vous indiquons ce qu’il faut corriger. Une fois corrigée, elle redevient visible.",
+      "s4li2": "<strong>Article interdit</strong> : l’annonce est retirée et l’enchère, si elle est en cours, est annulée. Nous vous indiquons toujours quelle règle s’applique et pourquoi.",
+      "s4li3": "<strong>Infractions répétées ou graves</strong> : le compte peut être suspendu ou fermé.",
+      "s4li4": "<strong>Articles illégaux</strong> : nous pouvons signaler la situation aux autorités compétentes.",
+      "s4p2": "Si vous n’êtes pas d’accord avec une décision, vous pouvez la contester dans votre compte, sous <strong>Mon compte</strong>, ou nous écrire à <a href=\"mailto:contact@bidroom.pt\">contact@bidroom.pt</a>. Nous répondons par une décision motivée.",
+      "s5": "5. Signaler une annonce",
+      "s5p1": "Si vous voyez une annonce qui ne respecte pas ces règles, utilisez le bouton <strong>Signaler</strong> sur la page de l’annonce ou écrivez-nous à <a href=\"mailto:contact@bidroom.pt\">contact@bidroom.pt</a>. Indiquez l’annonce et le motif. Nous analysons tous les signalements, et l’identité de la personne qui signale n’est pas communiquée au vendeur."
+    },
+    "tabs": {
+      "terms": "Conditions d’utilisation",
+      "privacy": "Politique de confidentialité",
+      "cookies": "Cookies",
+      "prohibited": "Articles interdits",
+      "contact": "Contact"
     }
   }
 }

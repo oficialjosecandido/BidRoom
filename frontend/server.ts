@@ -85,9 +85,9 @@ app.use(async (req, res, next) => {
     const response = await angularApp.handle(req);
     if (response) {
       // SSR'd HTML is anonymous (no per-user data is rendered on the server),
-      // so shared caches may hold it briefly; browsers always revalidate.
+      // so shared caches / Azure Front Door may hold it; browsers always revalidate.
       if (!response.headers.has('cache-control')) {
-        res.setHeader('Cache-Control', 'public, max-age=0, s-maxage=60, stale-while-revalidate=300');
+        res.setHeader('Cache-Control', 'public, max-age=0, s-maxage=300, stale-while-revalidate=600');
       }
       writeResponseToNodeResponse(response, res);
     } else {

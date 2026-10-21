@@ -327,10 +327,22 @@ export class SeoService {
   }
 
   /**
+   * Kick off the homepage carousel LCP image during SSR / early hydration.
+   * sizes match home.component HERO_IMG_SIZES (min(380px, 78vw)).
+   */
+  setHomeLcpPreload(originalImage: string | null | undefined): void {
+    this.setLcpPreload(originalImage, 'min(380px, 78vw)');
+  }
+
+  /**
    * Kick off the listing hero download in &lt;head&gt; during SSR / early hydration,
    * so mobile LCP does not wait for Angular to paint the &lt;img&gt;.
    */
   private setListingLcpPreload(originalImage: string): void {
+    this.setLcpPreload(originalImage, LISTING_HERO_SIZES);
+  }
+
+  private setLcpPreload(originalImage: string | null | undefined, sizes: string): void {
     if (!originalImage || originalImage === DEFAULT_OG) {
       this.removeListingLcpPreload();
       return;
@@ -352,7 +364,7 @@ export class SeoService {
     link.setAttribute('href', href);
     if (srcset) {
       link.setAttribute('imagesrcset', srcset);
-      link.setAttribute('imagesizes', LISTING_HERO_SIZES);
+      link.setAttribute('imagesizes', sizes);
     } else {
       link.removeAttribute('imagesrcset');
       link.removeAttribute('imagesizes');

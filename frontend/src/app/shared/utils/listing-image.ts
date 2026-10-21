@@ -26,23 +26,23 @@ export function listingImageSrc(url: string | null | undefined, size: ListingIma
 
 /**
  * Responsive srcset for the listing hero.
- * Phone ~480–640, larger viewports 960 — keeps mobile LCP off the desktop file.
+ * Only advertise widths that are widely backfilled (480 + 960). Advertising
+ * 640w caused 404s on partial backfill and Lighthouse saw multi‑MB originals.
  */
 export function listingImageSrcSet(url: string | null | undefined): string {
   const src = String(url || '').trim();
   if (!src) return '';
   const w480 = listingImageSrc(src, 'thumb');
-  const w640 = listingImageSrc(src, 'mid');
   const w960 = listingImageSrc(src, 'card');
   if (w480 === w960) return '';
-  return `${w480} 480w, ${w640} 640w, ${w960} 960w`;
+  return `${w480} 480w, ${w960} 960w`;
 }
 
 /** Matches the listing-details gallery layout (padded mobile, ~800px desktop). */
 export const LISTING_HERO_SIZES = '(max-width: 840px) calc(100vw - 32px), 800px';
 
 /**
- * If a variant 404s, try the next larger WebP before falling back to the original.
+ * If a variant 404s, try 480 → 960 WebP before falling back to the original.
  * Bind: (error)="onListingImageError($event, originalUrl)"
  */
 export function onListingImageError(event: Event, originalUrl: string): void {
@@ -52,19 +52,18 @@ export function onListingImageError(event: Event, originalUrl: string): void {
   const step = Number(img.dataset['fallbackStep'] || '0');
   img.removeAttribute('srcset');
 
-  // Prefer a capped WebP over a multi‑MB original when smaller variants 404.
   if (step === 0) {
     img.dataset['fallbackStep'] = '1';
-    const mid = listingImageSrc(originalUrl, 'mid');
-    if (mid && mid !== img.src) {
-      img.src = mid;
+    const thumb = listingImageSrc(originalUrl, 'thumb');
+    if (thumb && thumb !== img.currentSrc && thumb !== img.src) {
+      img.src = thumb;
       return;
     }
   }
   if (step <= 1) {
     img.dataset['fallbackStep'] = '2';
     const card = listingImageSrc(originalUrl, 'card');
-    if (card && card !== img.src) {
+    if (card && card !== img.currentSrc && card !== img.src) {
       img.src = card;
       return;
     }

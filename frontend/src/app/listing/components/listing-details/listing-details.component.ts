@@ -804,7 +804,9 @@ export class ListingDetailsComponent implements OnInit, OnDestroy {
   }
 
   thumbImageSrc(url: string): string {
-    return listingImageSrc(url, 'micro');
+    // Prefer 160w once backfill is universal; 480w is the width that already
+    // exists on most live blobs and avoids a 404 waterfall per thumb.
+    return listingImageSrc(url, 'thumb');
   }
 
   onGalleryImgError(event: Event, originalUrl: string): void {

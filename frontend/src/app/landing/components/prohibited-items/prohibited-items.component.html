@@ -1,0 +1,58 @@
+<app-legal-layout activeTab="prohibited">
+  <div class="page-wrap">
+    <div class="legal-header">
+      <div class="legal-eyebrow">{{ 'legal.prohibited.eyebrow' | translate }}</div>
+      <h1 class="legal-title">{{ 'legal.prohibited.title' | translate }}</h1>
+      <div class="legal-updated">{{ 'legal.prohibited.updated' | translate }}</div>
+    </div>
+
+    <div class="legal-body">
+      <p>{{ 'legal.prohibited.intro1' | translate }}</p>
+      <p>{{ 'legal.prohibited.intro2' | translate }}</p>
+      <p>{{ 'legal.prohibited.intro3' | translate }}</p>
+
+      <h2>{{ 'legal.prohibited.s1' | translate }}</h2>
+      @for (group of prohibitedGroups; track group.key) {
+        <h3>{{ 'legal.prohibited.s1' + group.key + '.t' | translate }}</h3>
+        <ul>
+          @for (li of group.lis; track li) {
+            <li [innerHTML]="'legal.prohibited.s1' + group.key + '.li' + li | translate"></li>
+          }
+        </ul>
+        @if (group.note) {
+          <p><em>{{ 'legal.prohibited.s1' + group.key + '.note' | translate }}</em></p>
+        }
+      }
+
+      <h2>{{ 'legal.prohibited.s2' | translate }}</h2>
+      <p>{{ 'legal.prohibited.s2p1' | translate }}</p>
+      @for (group of restrictedGroups; track group.key) {
+        <h3>{{ 'legal.prohibited.s2' + group.key + '.t' | translate }}</h3>
+        <ul>
+          @for (li of group.lis; track li) {
+            <li [innerHTML]="'legal.prohibited.s2' + group.key + '.li' + li | translate"></li>
+          }
+        </ul>
+      }
+
+      <h2>{{ 'legal.prohibited.s3' | translate }}</h2>
+      <ul>
+        @for (li of listingRules; track li) {
+          <li [innerHTML]="'legal.prohibited.s3li' + li | translate"></li>
+        }
+      </ul>
+
+      <h2>{{ 'legal.prohibited.s4' | translate }}</h2>
+      <p>{{ 'legal.prohibited.s4p1' | translate }}</p>
+      <ul>
+        @for (li of enforcementTiers; track li) {
+          <li [innerHTML]="'legal.prohibited.s4li' + li | translate"></li>
+        }
+      </ul>
+      <p [innerHTML]="'legal.prohibited.s4p2' | translate"></p>
+
+      <h2>{{ 'legal.prohibited.s5' | translate }}</h2>
+      <p [innerHTML]="'legal.prohibited.s5p1' | translate"></p>
+    </div>
+  </div>
+</app-legal-layout>

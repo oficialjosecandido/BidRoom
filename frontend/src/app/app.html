@@ -1,4 +1,6 @@
 <router-outlet />
-<app-cookie-banner />
-<app-pwa-install-banner />
-<app-support-chat-widget />
+@if (isBrowser) {
+  <app-cookie-banner />
+  <app-pwa-install-banner />
+  <app-support-chat-widget />
+}

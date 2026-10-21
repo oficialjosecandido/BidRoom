@@ -11,6 +11,7 @@ export const serverRoutes: ServerRoute[] = [
   { path: 'landing/contact',           renderMode: RenderMode.Server },
   { path: 'landing/privacy-policy',    renderMode: RenderMode.Server },
   { path: 'landing/cookies',           renderMode: RenderMode.Server },
+  { path: 'landing/prohibited-items',  renderMode: RenderMode.Server },
   { path: 'landing/terms-conditions',  renderMode: RenderMode.Server },
   { path: 'listing/:slug',             renderMode: RenderMode.Server },
   { path: 'seller/:id',                renderMode: RenderMode.Server },
