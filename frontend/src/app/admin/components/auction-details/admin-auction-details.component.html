@@ -48,6 +48,22 @@
         <div class="info-card">
           <h2 class="card-title">Auction Information</h2>
 
+          <div class="auction-overview">
+            <div class="auction-cover">
+              @if (coverPhotoUrl) {
+                <a class="auction-cover__link" [href]="coverPhotoUrl" target="_blank" rel="noopener noreferrer" title="Open cover photo">
+                  <img class="auction-cover__img" [src]="coverPhotoUrl" [alt]="auction.title" />
+                </a>
+                @if (photoDraft.length > 1) {
+                  <span class="auction-cover__count">{{ photoDraft.length }} photos</span>
+                }
+              } @else {
+                <div class="auction-cover__empty" aria-hidden="true">
+                  <span>No photo</span>
+                </div>
+              }
+            </div>
+
           <table class="nexus-kv-table auction-kv-table">
             <tbody>
               <tr>
@@ -157,6 +173,7 @@
               }
             </tbody>
           </table>
+          </div>
         </div>
 
         <!-- Photos Card -->

@@ -862,11 +862,11 @@
 
         <div class="modal-actions">
           <button type="button" class="btn btn-secondary" (click)="closeDamageClaimModal()" [disabled]="damageClaimSubmitting">
-            {{ 'common.cancel' | translate }}
+            {{ 'dashboard.common.cancel' | translate }}
           </button>
           <button type="button" class="btn btn-damage" (click)="submitDamageClaim()"
             [disabled]="damageClaimSubmitting || damagePhotoUrls.length < 1 || packagingPhotoUrls.length < 1">
-            @if (damageClaimSubmitting) { {{ 'common.submitting' | translate }} }
+            @if (damageClaimSubmitting) { {{ 'dashboard.common.submitting' | translate }} }
             @else { {{ 'transactions.damageClaim.submit' | translate }} }
           </button>
         </div>

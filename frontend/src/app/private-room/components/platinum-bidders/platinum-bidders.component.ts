@@ -50,7 +50,7 @@ export class PlatinumBiddersComponent implements OnInit {
         this.isLoading = false;
       },
       error: (error) => {
-        this.error = error?.message || this.translate.instant('listing.platinumBidders.errorLoading');
+        this.error = error?.message || this.translate.instant('listingDetails.platinumBidders.errorLoading');
         this.isLoading = false;
       }
     });
@@ -68,7 +68,7 @@ export class PlatinumBiddersComponent implements OnInit {
       this.selectedBidderIds.splice(index, 1);
     } else {
       if (this.selectedBidderIds.length >= 5) {
-        alert(this.translate.instant('listing.platinumBidders.maxAlert'));
+        alert(this.translate.instant('listingDetails.platinumBidders.maxAlert'));
         return;
       }
       this.selectedBidderIds.push(bidderId);
@@ -100,7 +100,7 @@ export class PlatinumBiddersComponent implements OnInit {
         }, 1000);
       },
       error: (error) => {
-        this.error = error?.message || this.translate.instant('listing.platinumBidders.errorSaving');
+        this.error = error?.message || this.translate.instant('listingDetails.platinumBidders.errorSaving');
         this.isSaving = false;
       }
     });

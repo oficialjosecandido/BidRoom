@@ -370,13 +370,22 @@ export class SeoService {
           '@type': ['Organization', 'OnlineBusiness'],
           '@id': `${BASE_URL}/#organization`,
           name: 'BidRoom',
-          legalName: 'BidRoom Unipessoal Lda',
+          // BidRoom is a brand; the operating company is Poetic Clouds. These
+          // must match the commercial registry exactly — crawlers and anyone
+          // vetting the company read this block, and a name that resolves to
+          // nothing in the RNPC reads as a fake business.
+          legalName: 'Poetic Clouds Unipessoal Lda',
+          vatID: 'PT517988615',
+          taxID: '517988615',
           url: BASE_URL,
           logo: `${BASE_URL}/favicon.svg`,
           email: 'contact@bidroom.pt',
           address: {
             '@type': 'PostalAddress',
-            addressLocality: 'Lisboa',
+            streetAddress: 'Rua da Fontainha 7',
+            postalCode: '2640-019',
+            addressLocality: 'Santo Isidoro, Mafra',
+            addressRegion: 'Lisboa',
             addressCountry: 'PT',
           },
           areaServed: {

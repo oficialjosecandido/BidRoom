@@ -443,6 +443,11 @@ export class AdminAuctionDetailsComponent implements OnInit, OnDestroy {
     return (this.auction?.images ?? []).filter(url => !isPlaceholderImage(url));
   }
 
+  /** Cover shown next to Auction Information (first draft photo). */
+  get coverPhotoUrl(): string | null {
+    return this.photoDraft[0] || null;
+  }
+
   get photosDirty(): boolean {
     return JSON.stringify(this.photoDraft) !== JSON.stringify(this.savedPhotos);
   }

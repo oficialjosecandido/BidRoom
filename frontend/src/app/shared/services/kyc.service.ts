@@ -47,8 +47,8 @@ export class KycService {
       error: (err) => {
         Swal.fire({
           icon: 'error',
-          title: this.translate.instant('dashboard.settings.kycUnavailableTitle'),
-          text: err?.error?.message || this.translate.instant('dashboard.settings.kycUnavailableText'),
+          title: this.translate.instant('dashboard.myAccount.kycUnavailableTitle'),
+          text: err?.error?.message || this.translate.instant('dashboard.myAccount.kycUnavailableText'),
           confirmButtonColor: '#7A4F84'
         });
       }
@@ -63,9 +63,9 @@ export class KycService {
     if (kycStatus === 'pending') {
       Swal.fire({
         icon: 'info',
-        title: this.translate.instant('dashboard.settings.kycPendingTitle'),
-        html: `<p style="color:#374151;font-size:0.95rem;line-height:1.5">${this.translate.instant('dashboard.settings.kycPending')}</p>`,
-        confirmButtonText: this.translate.instant('dashboard.settings.kycOk'),
+        title: this.translate.instant('dashboard.myAccount.kycPendingTitle'),
+        html: `<p style="color:#374151;font-size:0.95rem;line-height:1.5">${this.translate.instant('dashboard.myAccount.kycPending')}</p>`,
+        confirmButtonText: this.translate.instant('dashboard.myAccount.kycOk'),
         confirmButtonColor: '#7A4F84'
       });
       return;
@@ -74,14 +74,14 @@ export class KycService {
     if (kycStatus === 'rejected') {
       Swal.fire({
         icon: 'warning',
-        title: this.translate.instant('dashboard.settings.kycRejectedTitle'),
+        title: this.translate.instant('dashboard.myAccount.kycRejectedTitle'),
         html: `
           <p style="color:#374151;font-size:0.95rem;line-height:1.5">
-            ${this.translate.instant('dashboard.settings.kycRejectedBase')}<br><br>
-            ${this.translate.instant('dashboard.settings.kycRejectedTryAgain')}
+            ${this.translate.instant('dashboard.myAccount.kycRejectedBase')}<br><br>
+            ${this.translate.instant('dashboard.myAccount.kycRejectedTryAgain')}
           </p>`,
         showCancelButton: true,
-        confirmButtonText: this.translate.instant('dashboard.settings.kycTryAgain'),
+        confirmButtonText: this.translate.instant('dashboard.myAccount.kycTryAgain'),
         cancelButtonText: this.translate.instant('dashboard.settings.cancelBtn'),
         confirmButtonColor: '#7A4F84'
       }).then(result => {
@@ -90,28 +90,28 @@ export class KycService {
       return;
     }
 
-    const threshold = this.translate.instant('dashboard.settings.kycThresholdAmount');
+    const threshold = this.translate.instant('dashboard.myAccount.kycThresholdAmount');
     Swal.fire({
-      title: this.translate.instant('dashboard.settings.kycGateTitle'),
+      title: this.translate.instant('dashboard.myAccount.kycGateTitle'),
       html: `
         <div style="text-align:left;padding:4px 0">
           <p style="color:#374151;font-size:0.9rem;line-height:1.5;margin:0 0 12px">
-            ${this.translate.instant('dashboard.settings.kycAmlDesc', { threshold })}
+            ${this.translate.instant('dashboard.myAccount.kycAmlDesc', { threshold })}
           </p>
           <p style="color:#374151;font-size:0.9rem;line-height:1.5;margin:0 0 8px">
-            ${this.translate.instant('dashboard.settings.kycYouWillNeed')}
+            ${this.translate.instant('dashboard.myAccount.kycYouWillNeed')}
           </p>
           <ul style="color:#374151;font-size:0.9rem;line-height:1.7;padding-left:18px;margin:0 0 12px">
-            <li>${this.translate.instant('dashboard.settings.kycDoc1')}</li>
-            <li>${this.translate.instant('dashboard.settings.kycDoc2')}</li>
+            <li>${this.translate.instant('dashboard.myAccount.kycDoc1')}</li>
+            <li>${this.translate.instant('dashboard.myAccount.kycDoc2')}</li>
           </ul>
           <p style="color:#6b7280;font-size:0.82rem;margin:0">
-            ${this.translate.instant('dashboard.settings.kycDoc3')}
+            ${this.translate.instant('dashboard.myAccount.kycDoc3')}
           </p>
         </div>`,
       showCancelButton: true,
-      confirmButtonText: this.translate.instant('dashboard.settings.kycStart'),
-      cancelButtonText: this.translate.instant('dashboard.settings.kycNotNow'),
+      confirmButtonText: this.translate.instant('dashboard.myAccount.kycStart'),
+      cancelButtonText: this.translate.instant('dashboard.myAccount.kycNotNow'),
       confirmButtonColor: '#7A4F84',
       width: 480
     }).then(result => {

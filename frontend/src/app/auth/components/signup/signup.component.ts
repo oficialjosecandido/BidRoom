@@ -101,7 +101,7 @@ export class SignupComponent {
 
     if (this.signupForm.invalid) {
       this.signupForm.markAllAsTouched();
-      this.errorMessage = this.translate.instant('auth.errors.fixIncomplete');
+      this.errorMessage = this.translate.instant('auth.errors.formIncomplete');
       return;
     }
 

@@ -1,16 +1,16 @@
 <div class="platinum-bidders-container">
   <div class="header-section">
     <button class="back-btn" (click)="navigateToDashboard()">
-      ← {{ 'listing.privateRoomBidders.backBtn' | translate }}
+      ← {{ 'listingDetails.privateRoomBidders.backBtn' | translate }}
     </button>
-    <h1 class="page-title">{{ 'listing.privateRoomBidders.title' | translate }}</h1>
-    <p class="page-description">{{ 'listing.privateRoomBidders.subtitle' | translate }}</p>
+    <h1 class="page-title">{{ 'listingDetails.privateRoomBidders.title' | translate }}</h1>
+    <p class="page-description">{{ 'listingDetails.privateRoomBidders.subtitle' | translate }}</p>
   </div>
 
   @if (isLoading) {
 <div class="loading-state">
     <div class="spinner"></div>
-    <p>{{ 'listing.privateRoomBidders.loading' | translate }}</p>
+    <p>{{ 'listingDetails.privateRoomBidders.loading' | translate }}</p>
   </div>
 }
 
@@ -18,7 +18,7 @@
 <div class="error-state">
     <div class="error-icon">⚠️</div>
     <p class="error-message">{{ error }}</p>
-    <button class="retry-btn" (click)="loadBidders()">{{ 'listing.privateRoomBidders.retry' | translate }}</button>
+    <button class="retry-btn" (click)="loadBidders()">{{ 'listingDetails.privateRoomBidders.retry' | translate }}</button>
   </div>
 }
 
@@ -33,7 +33,7 @@
 <div class="content-section">
     <div class="selection-info">
       <span class="selection-count">
-        {{ selectedBidderIds.length }} {{ 'listing.privateRoomBidders.ofMax' | translate }}
+        {{ selectedBidderIds.length }} {{ 'listingDetails.privateRoomBidders.ofMax' | translate }}
       </span>
       <button
         class="save-btn"
@@ -41,8 +41,8 @@
         [disabled]="!canSelect() || isSaving"
         (click)="saveSelection()"
       >
-        @if (!isSaving) { <span>{{ 'listing.privateRoomBidders.save' | translate }}</span> }
-        @if (isSaving) { <span>{{ 'listing.privateRoomBidders.saving' | translate }}</span> }
+        @if (!isSaving) { <span>{{ 'listingDetails.privateRoomBidders.save' | translate }}</span> }
+        @if (isSaving) { <span>{{ 'listingDetails.privateRoomBidders.saving' | translate }}</span> }
       </button>
     </div>
 
@@ -66,13 +66,13 @@
           />
           <div class="bidder-badges">
             @if (bidder.isAuthenticated) {
-<span class="badge authenticated">{{ 'listing.privateRoomBidders.badgeAuth' | translate }}</span>
+<span class="badge authenticated">{{ 'listingDetails.privateRoomBidders.badgeAuth' | translate }}</span>
 }
             @if (!bidder.isAuthenticated) {
-<span class="badge unauthenticated">{{ 'listing.privateRoomBidders.badgeGuest' | translate }}</span>
+<span class="badge unauthenticated">{{ 'listingDetails.privateRoomBidders.badgeGuest' | translate }}</span>
 }
             @if (currentPlatinumBidders.includes(bidder._id || '')) {
-<span class="badge invited">{{ 'listing.privateRoomBidders.badgeInvited' | translate }}</span>
+<span class="badge invited">{{ 'listingDetails.privateRoomBidders.badgeInvited' | translate }}</span>
 }
           </div>
         </div>
@@ -83,22 +83,22 @@
 
         <div class="bidder-stats">
           <div class="stat-item">
-            <span class="stat-label">{{ 'listing.privateRoomBidders.statBids' | translate }}:</span>
+            <span class="stat-label">{{ 'listingDetails.privateRoomBidders.statBids' | translate }}:</span>
             <span class="stat-value">{{ bidder.bidCount }}</span>
           </div>
           <div class="stat-item">
-            <span class="stat-label">{{ 'listing.privateRoomBidders.statHighest' | translate }}:</span>
+            <span class="stat-label">{{ 'listingDetails.privateRoomBidders.statHighest' | translate }}:</span>
             <span class="stat-value">€{{ bidder.highestBid | number:'1.2-2' }}</span>
           </div>
           <div class="stat-item">
-            <span class="stat-label">{{ 'listing.privateRoomBidders.statLast' | translate }}:</span>
+            <span class="stat-label">{{ 'listingDetails.privateRoomBidders.statLast' | translate }}:</span>
             <span class="stat-value">{{ formatDate(bidder.lastBidDate) }}</span>
           </div>
         </div>
 
         @if (!bidder.isAuthenticated || !bidder._id) {
 <div class="unavailable-message">
-          <p>{{ 'listing.privateRoomBidders.guestNote' | translate }}</p>
+          <p>{{ 'listingDetails.privateRoomBidders.guestNote' | translate }}</p>
         </div>
 }
       </div>
@@ -109,8 +109,8 @@
     @if (bidders.length === 0) {
 <div class="empty-state">
       <div class="empty-icon">👥</div>
-      <p class="empty-message">{{ 'listing.privateRoomBidders.empty' | translate }}</p>
-      <p class="empty-description">{{ 'listing.privateRoomBidders.emptyDesc' | translate }}</p>
+      <p class="empty-message">{{ 'listingDetails.privateRoomBidders.empty' | translate }}</p>
+      <p class="empty-description">{{ 'listingDetails.privateRoomBidders.emptyDesc' | translate }}</p>
     </div>
 }
   </div>

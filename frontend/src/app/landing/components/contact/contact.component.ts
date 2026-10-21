@@ -6,9 +6,13 @@ import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import { LegalLayoutComponent } from '../legal/legal-layout.component';
 import { SeoService } from '../../../shared/services/seo.service';
 
-/** OpenStreetMap embed centred on Lisboa (NAP locality until a street address is confirmed). */
-const LISBON_MAP =
-  'https://www.openstreetmap.org/export/embed.html?bbox=-9.20%2C38.69%2C-9.10%2C38.75&layer=mapnik&marker=38.7223%2C-9.1393';
+/**
+ * OpenStreetMap embed centred on the registered seat: Santo Isidoro, Mafra.
+ * It used to point at Lisboa city centre, which contradicted the address in
+ * the registry. The marker is the locality, not a surveyed door number.
+ */
+const SEAT_MAP =
+  'https://www.openstreetmap.org/export/embed.html?bbox=-9.42%2C38.94%2C-9.34%2C39.00&layer=mapnik&marker=38.9700%2C-9.3800';
 
 @Component({
   selector: 'app-contact',
@@ -26,7 +30,7 @@ export class ContactComponent implements OnInit {
 
   contactForm: FormGroup;
   isSubmitting = false;
-  mapUrl: SafeResourceUrl = this.sanitizer.bypassSecurityTrustResourceUrl(LISBON_MAP);
+  mapUrl: SafeResourceUrl = this.sanitizer.bypassSecurityTrustResourceUrl(SEAT_MAP);
 
   constructor() {
     this.contactForm = this.fb.group({

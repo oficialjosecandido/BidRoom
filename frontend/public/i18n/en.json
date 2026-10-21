@@ -192,7 +192,7 @@
         "privacy": "Privacy",
         "cookies": "Cookies",
         "contact": "Contact",
-        "copyright": "© 2026 BidRoom · All rights reserved · Lisbon, Portugal",
+        "copyright": "© 2026 BidRoom · Poetic Clouds Unipessoal Lda · All rights reserved · Mafra, Portugal",
         "howItWorks": "How it works",
         "privateRooms": "Private Rooms",
         "categories": "Categories",
@@ -1568,6 +1568,7 @@
     },
     "verifyEmail": {
       "loading": "Verifying your email...",
+      "pleaseWait": "This only takes a moment.",
       "successTitle": "Email Verified!",
       "successDesc": "Your email has been verified. You can now sign in.",
       "errorTitle": "Verification Failed",
@@ -3461,296 +3462,6 @@
       }
     }
   },
-  "privacy": {
-    "hero": {
-      "title": "Privacy Policy",
-      "subtitle": "Your privacy is important to us. This policy explains how we collect, use, and protect your information.",
-      "lastUpdated": "Last updated: December 2024"
-    },
-    "s1": {
-      "title": "1. Introduction",
-      "p1": "BidRoom (\"we,\" \"our,\" or \"us\") is committed to protecting your privacy. This Privacy Policy explains how we collect, use, disclose, and safeguard your information when you use our auction marketplace platform.",
-      "p2": "By using our service, you agree to the collection and use of information in accordance with this policy."
-    },
-    "s2": {
-      "title": "2. Information We Collect",
-      "s1": {
-        "title": "2.1 Personal Information",
-        "intro": "We collect information you provide directly to us, such as:",
-        "li1": "Name and contact information (email address, phone number)",
-        "li2": "Account credentials (username, password)",
-        "li3": "Payment information (credit card details, billing address)",
-        "li4": "Profile information and preferences",
-        "li5": "Communications with us (support requests, feedback)"
-      },
-      "s2": {
-        "title": "2.2 Usage Information",
-        "intro": "We automatically collect certain information about your use of our service:",
-        "li1": "Device information (IP address, browser type, operating system)",
-        "li2": "Usage data (pages visited, time spent, features used)",
-        "li3": "Bidding activity and auction participation",
-        "li4": "Cookies and similar tracking technologies"
-      }
-    },
-    "s3": {
-      "title": "3. How We Use Your Information",
-      "intro": "We use the information we collect to:",
-      "li1": "Provide, maintain, and improve our services",
-      "li2": "Process transactions and manage your account",
-      "li3": "Facilitate auctions and bidding processes",
-      "li4": "Send you important updates and notifications",
-      "li5": "Provide customer support",
-      "li6": "Detect and prevent fraud and abuse",
-      "li7": "Comply with legal obligations",
-      "li8": "Analyze usage patterns to improve user experience"
-    },
-    "s4": {
-      "title": "4. Information Sharing and Disclosure",
-      "intro": "We do not sell, trade, or rent your personal information to third parties. We may share your information in the following circumstances:",
-      "s1": {
-        "title": "4.1 Service Providers",
-        "intro": "We may share information with trusted third-party service providers who assist us in operating our platform, such as:",
-        "li1": "Payment processors",
-        "li2": "Email service providers",
-        "li3": "Analytics services",
-        "li4": "Customer support tools"
-      },
-      "s2": {
-        "title": "4.2 Legal Requirements",
-        "intro": "We may disclose information when required by law or to:",
-        "li1": "Comply with legal processes or government requests",
-        "li2": "Protect our rights, property, or safety",
-        "li3": "Protect the rights, property, or safety of our users",
-        "li4": "Investigate potential violations of our terms"
-      },
-      "s3": {
-        "title": "4.3 Business Transfers",
-        "p": "In the event of a merger, acquisition, or sale of assets, your information may be transferred as part of the transaction."
-      }
-    },
-    "s5": {
-      "title": "5. Data Security",
-      "intro": "We implement appropriate technical and organizational measures to protect your personal information against unauthorized access, alteration, disclosure, or destruction. These measures include:",
-      "li1": "Encryption of sensitive data in transit and at rest",
-      "li2": "Regular security assessments and updates",
-      "li3": "Access controls and authentication systems",
-      "li4": "Employee training on data protection",
-      "note": "However, no method of transmission over the internet or electronic storage is 100% secure, and we cannot guarantee absolute security."
-    },
-    "s6": {
-      "title": "6. Your Rights and Choices",
-      "intro": "You have certain rights regarding your personal information:",
-      "li1": {
-        "label": "Access:",
-        "text": "Request access to your personal information"
-      },
-      "li2": {
-        "label": "Correction:",
-        "text": "Request correction of inaccurate information"
-      },
-      "li3": {
-        "label": "Deletion:",
-        "text": "Request deletion of your personal information"
-      },
-      "li4": {
-        "label": "Portability:",
-        "text": "Request a copy of your data in a portable format"
-      },
-      "li5": {
-        "label": "Opt-out:",
-        "text": "Unsubscribe from marketing communications"
-      },
-      "note": "To exercise these rights, please contact us using the information provided in the \"Contact Us\" section."
-    },
-    "s7": {
-      "title": "7. Cookies and Tracking Technologies",
-      "intro": "We use cookies and similar technologies to enhance your experience on our platform. Cookies are small text files stored on your device that help us:",
-      "li1": "Remember your preferences and settings",
-      "li2": "Analyze how you use our service",
-      "li3": "Provide personalized content and advertisements",
-      "li4": "Improve our platform's functionality",
-      "note": "You can control cookie settings through your browser preferences, but disabling cookies may affect the functionality of our service."
-    },
-    "s8": {
-      "title": "8. Data Retention",
-      "intro": "We retain your personal information for as long as necessary to provide our services and fulfill the purposes outlined in this Privacy Policy. We may retain certain information for longer periods to:",
-      "li1": "Comply with legal obligations",
-      "li2": "Resolve disputes and enforce agreements",
-      "li3": "Prevent fraud and abuse"
-    },
-    "s9": {
-      "title": "9. International Data Transfers",
-      "p": "Your information may be transferred to and processed in countries other than your own. We ensure that such transfers comply with applicable data protection laws and implement appropriate safeguards to protect your information."
-    },
-    "s10": {
-      "title": "10. Children's Privacy",
-      "p": "Our service is not intended for children under 13 years of age. We do not knowingly collect personal information from children under 13. If we become aware that we have collected personal information from a child under 13, we will take steps to delete such information."
-    },
-    "s11": {
-      "title": "11. Changes to This Privacy Policy",
-      "intro": "We may update this Privacy Policy from time to time. We will notify you of any material changes by:",
-      "li1": "Posting the updated policy on our website",
-      "li2": "Sending you an email notification",
-      "li3": "Displaying a notice on our platform",
-      "note": "Your continued use of our service after any changes constitutes acceptance of the updated Privacy Policy."
-    },
-    "s12": {
-      "title": "12. Contact Us",
-      "intro": "If you have any questions about this Privacy Policy or our data practices, please contact us:",
-      "emailLabel": "Email:",
-      "addressLabel": "Address:",
-      "address": "BidRoom Privacy Team, 123 Auction Street, Commerce City, CC 12345",
-      "phoneLabel": "Phone:"
-    }
-  },
-  "terms": {
-    "hero": {
-      "title": "Terms and Conditions",
-      "subtitle": "Please read these terms carefully before using our auction marketplace platform.",
-      "lastUpdated": "Last updated: December 2024"
-    },
-    "s1": {
-      "title": "1. Acceptance of Terms",
-      "p1": "By accessing and using BidRoom (\"the Service\"), you accept and agree to be bound by the terms and provision of this agreement. If you do not agree to abide by the above, please do not use this service.",
-      "p2": "These Terms and Conditions (\"Terms\") govern your use of our auction marketplace platform operated by BidRoom (\"us\", \"we\", or \"our\")."
-    },
-    "s2": {
-      "title": "2. Service Description",
-      "intro": "BidRoom is an online auction marketplace that allows users to:",
-      "li1": "List items for auction",
-      "li2": "Participate in auctions by placing bids",
-      "li3": "Purchase items through the auction process",
-      "li4": "Interact with other users in a secure environment",
-      "note": "We reserve the right to modify, suspend, or discontinue the Service at any time without notice."
-    },
-    "s3": {
-      "title": "3. User Accounts",
-      "s1": {
-        "title": "3.1 Account Creation",
-        "intro": "To use our Service, you must create an account by providing accurate and complete information. You are responsible for:",
-        "li1": "Maintaining the confidentiality of your account credentials",
-        "li2": "All activities that occur under your account",
-        "li3": "Notifying us immediately of any unauthorized use",
-        "li4": "Ensuring your account information remains current and accurate"
-      },
-      "s2": {
-        "title": "3.2 Account Eligibility",
-        "p": "You must be at least 18 years old to create an account and use our Service. By creating an account, you represent and warrant that you meet this age requirement."
-      },
-      "s3": {
-        "title": "3.3 Account Suspension",
-        "p": "We reserve the right to suspend or terminate accounts that violate these Terms or engage in fraudulent or illegal activities."
-      }
-    },
-    "s4": {
-      "title": "4. Bidding and Auctions",
-      "s1": {
-        "title": "4.1 Bidding Process",
-        "intro": "When participating in auctions:",
-        "li1": "All bids are final and cannot be withdrawn once placed",
-        "li2": "You must have sufficient funds to cover your maximum bid",
-        "li3": "We use a proxy bidding system that automatically bids on your behalf",
-        "li4": "Winning bidders are obligated to complete the purchase"
-      },
-      "s2": {
-        "title": "4.2 Auction Rules",
-        "li1": "Auctions have specific start and end times",
-        "li2": "Bids must meet minimum increments",
-        "li3": "Reserve prices may apply to certain auctions",
-        "li4": "We reserve the right to cancel auctions at our discretion"
-      },
-      "s3": {
-        "title": "4.3 Payment Obligations",
-        "p": "Winning bidders must complete payment within 48 hours of auction close. Failure to pay may result in account suspension and the item being offered to the next highest bidder."
-      }
-    },
-    "s5": {
-      "title": "5. Seller Responsibilities",
-      "intro": "If you list items for auction, you agree to:",
-      "li1": "Provide accurate and complete item descriptions",
-      "li2": "Include clear, high-quality photographs",
-      "li3": "Set appropriate starting prices",
-      "li4": "Ship items promptly after receiving payment",
-      "li5": "Respond to buyer inquiries in a timely manner",
-      "li6": "Comply with all applicable laws and regulations"
-    },
-    "s6": {
-      "title": "6. Prohibited Activities",
-      "intro": "You agree not to:",
-      "li1": "Use the Service for any illegal or unauthorized purpose",
-      "li2": "Interfere with or disrupt the Service or servers",
-      "li3": "Attempt to gain unauthorized access to any part of the Service",
-      "li4": "Create multiple accounts to circumvent restrictions",
-      "li5": "Engage in shill bidding or other fraudulent practices",
-      "li6": "List prohibited items (weapons, illegal substances, etc.)",
-      "li7": "Violate any applicable laws or regulations",
-      "li8": "Harass, abuse, or harm other users"
-    },
-    "s7": {
-      "title": "7. Fees and Payments",
-      "s1": {
-        "title": "7.1 Service Fees",
-        "intro": "We may charge fees for certain services, including:",
-        "li1": "Listing fees for auction items",
-        "li2": "Transaction fees for completed sales",
-        "li3": "Premium features and services"
-      },
-      "s2": {
-        "title": "7.2 Payment Processing",
-        "p": "All payments are processed securely through our payment partners. We accept major credit cards and other approved payment methods."
-      },
-      "s3": {
-        "title": "7.3 Refunds",
-        "p": "Refund policies vary by transaction type and are subject to our discretion and applicable laws."
-      }
-    },
-    "s8": {
-      "title": "8. Intellectual Property",
-      "p1": "The Service and its original content, features, and functionality are owned by BidRoom and are protected by international copyright, trademark, patent, trade secret, and other intellectual property laws.",
-      "p2": "You may not reproduce, distribute, modify, or create derivative works of our content without express written permission."
-    },
-    "s9": {
-      "title": "9. Disclaimers",
-      "p1": "THE SERVICE IS PROVIDED \"AS IS\" AND \"AS AVAILABLE\" WITHOUT WARRANTIES OF ANY KIND, EITHER EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO IMPLIED WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE, AND NON-INFRINGEMENT.",
-      "p2": "We do not guarantee that the Service will be uninterrupted, secure, or error-free, or that any defects will be corrected."
-    },
-    "s10": {
-      "title": "10. Limitation of Liability",
-      "p1": "TO THE MAXIMUM EXTENT PERMITTED BY LAW, BIDROOM SHALL NOT BE LIABLE FOR ANY INDIRECT, INCIDENTAL, SPECIAL, CONSEQUENTIAL, OR PUNITIVE DAMAGES, INCLUDING WITHOUT LIMITATION, LOSS OF PROFITS, DATA, USE, GOODWILL, OR OTHER INTANGIBLE LOSSES.",
-      "p2": "Our total liability to you for any damages arising from or related to these Terms or the Service shall not exceed the amount you paid us in the 12 months preceding the claim."
-    },
-    "s11": {
-      "title": "11. Indemnification",
-      "intro": "You agree to defend, indemnify, and hold harmless BidRoom and its officers, directors, employees, and agents from and against any claims, damages, obligations, losses, liabilities, costs, or debt, and expenses (including attorney's fees) arising from:",
-      "li1": "Your use of the Service",
-      "li2": "Your violation of these Terms",
-      "li3": "Your violation of any third-party rights",
-      "li4": "Any content you submit, post, or transmit through the Service"
-    },
-    "s12": {
-      "title": "12. Termination",
-      "p1": "We may terminate or suspend your account and access to the Service immediately, without prior notice or liability, for any reason whatsoever, including without limitation if you breach the Terms.",
-      "p2": "Upon termination, your right to use the Service will cease immediately. All provisions of the Terms which by their nature should survive termination shall survive termination."
-    },
-    "s13": {
-      "title": "13. Governing Law",
-      "p1": "These Terms shall be interpreted and governed by the laws of the State of Delaware, without regard to its conflict of law provisions.",
-      "p2": "Any disputes arising from these Terms or your use of the Service shall be resolved in the courts of Delaware."
-    },
-    "s14": {
-      "title": "14. Changes to Terms",
-      "p1": "We reserve the right to modify or replace these Terms at any time. If a revision is material, we will try to provide at least 30 days notice prior to any new terms taking effect.",
-      "p2": "Your continued use of the Service after any such changes constitutes your acceptance of the new Terms."
-    },
-    "s15": {
-      "title": "15. Contact Information",
-      "intro": "If you have any questions about these Terms and Conditions, please contact us:",
-      "emailLabel": "Email:",
-      "addressLabel": "Address:",
-      "address": "BidRoom Legal Department, 123 Auction Street, Commerce City, CC 12345",
-      "phoneLabel": "Phone:"
-    }
-  },
   "report": {
     "titleListing": "Report Listing",
     "titleUser": "Report User",
@@ -3855,15 +3566,15 @@
       "contact": "Contact"
     },
     "footer": {
-      "copy": "© 2025 BidRoom.pt · BidRoom Unipessoal Lda · VAT 123 456 789"
+      "copy": "© 2026 BidRoom.pt · Poetic Clouds Unipessoal Lda · VAT PT517988615"
     },
     "terms": {
       "eyebrow": "Terms of Use",
       "title": "General terms and conditions of platform use",
-      "updated": "Last updated: 1 October 2026",
+      "updated": "Last updated: 21 October 2026",
       "intro": "By using BidRoom.pt, you accept these Terms of Use. Please read them carefully. If you have questions, contact us at <a href=\"mailto:contact@bidroom.pt\">contact@bidroom.pt</a>.",
       "h1": "1. Who we are",
-      "h1p1": "BidRoom.pt is an online auction marketplace operated by <strong>BidRoom Unipessoal Lda</strong>, based in Lisbon, Portugal, registered with the Lisbon Commercial Registry. BidRoom acts as a technology intermediary between buyers and sellers and is not a contracting party in transactions on the platform.",
+      "h1p1": "BidRoom.pt is an online auction marketplace operated by <strong>Poetic Clouds Unipessoal Lda</strong>, a single-member private limited company with its registered office at Rua da Fontainha 7, 2640-019 Santo Isidoro, Mafra, Portugal, registered under the single commercial registration and tax number 517988615, with a share capital of €1,500. The commercial registry certificate can be verified with access code 3745-4508-1787. BidRoom acts as a technology intermediary between buyers and sellers and is not a contracting party in transactions on the platform.",
       "h2": "2. Eligibility",
       "h2p1": "To use the platform, you must be at least 18 years old and have legal capacity to enter into contracts. By creating an account, you declare that you meet these requirements.",
       "h3": "3. The platform",
@@ -3912,11 +3623,11 @@
       "h12": "12. Minors",
       "h12p1": "BidRoom.pt is intended exclusively for users aged <strong>18 or over</strong>. We do not knowingly collect personal data from anyone under 18. If we learn that a minor has created an account, we will close it immediately and delete associated data. Parents or guardians who suspect a minor has created a BidRoom account should contact us at <a href=\"mailto:contact@bidroom.pt\">contact@bidroom.pt</a>.",
       "h13": "13. Intellectual property",
-      "h13p1": "All content on BidRoom.pt — including design, code, brand, and text — is owned by BidRoom Unipessoal Lda. Users may not reproduce, distribute, or create derivative works without express written authorisation.",
+      "h13p1": "All content on BidRoom.pt — including design, code, brand, and text — is owned by Poetic Clouds Unipessoal Lda. Users may not reproduce, distribute, or create derivative works without express written authorisation.",
       "h14": "14. Limitation of liability",
       "h14p1": "BidRoom acts as a technology intermediary and is not responsible for the quality, authenticity, or legality of listed items. BidRoom's maximum liability to any user, in any circumstance, is limited to commission fees paid in the last 12 months. This limitation does not affect consumers' mandatory rights under Portuguese and EU law.",
       "h15": "15. Applicable law and jurisdiction",
-      "h15p1": "These Terms are governed by Portuguese law. In case of dispute, the parties agree to submit to the courts of Lisbon, without prejudice to consumers' rights under applicable EU legislation.",
+      "h15p1": "These Terms are governed by Portuguese law. Consumers may always bring proceedings before the courts of their own place of residence; in all other cases the parties submit to the competent Portuguese courts. This is without prejudice to consumers' rights under applicable EU legislation.",
       "h16": "16. Changes to the Terms",
       "h16p1": "BidRoom reserves the right to change these Terms at any time, with at least 15 days' notice to registered users. Continued use of the platform after that period implies acceptance of the changes.",
       "h17": "17. Non-payment penalty",
@@ -3931,9 +3642,9 @@
     "privacy": {
       "eyebrow": "Privacy Policy",
       "title": "How we process your personal data",
-      "updated": "Last updated: 1 May 2025 · GDPR compliant",
+      "updated": "Last updated: 21 October 2026 · GDPR compliant",
       "dpoLabel": "Data controller:",
-      "dpoVal": " BidRoom Unipessoal Lda · contact@bidroom.pt",
+      "dpoVal": "Poetic Clouds Unipessoal Lda · Rua da Fontainha 7, 2640-019 Santo Isidoro, Mafra, Portugal · contact@bidroom.pt",
       "h1": "1. What data we collect",
       "th1": "Category",
       "th2": "Data",
@@ -4068,8 +3779,14 @@
       "general": "General",
       "legalLabel": "Legal / GDPR",
       "address": "Address",
-      "company": "BidRoom Unipessoal Lda",
-      "addressLine": "Lisbon, Portugal",
+      "company": "Poetic Clouds Unipessoal Lda",
+      "addressLine": "Rua da Fontainha 7, 2640-019 Santo Isidoro, Mafra, Portugal",
+      "nipcLabel": "Company / VAT number",
+      "nipcVal": "517988615",
+      "capitalLabel": "Share capital",
+      "capitalVal": "€1,500",
+      "registryLabel": "Commercial registry",
+      "registryVal": "Permanent certificate: 3745-4508-1787",
       "hours": "Support hours",
       "hoursVal": "Mon–Fri · 9am–6pm (Lisbon)",
       "reclamacoesLabel": "Complaints Book",
@@ -4079,8 +3796,8 @@
       "ralLabel": "Alternative Dispute Resolution",
       "ralSub": "For disputes not resolved by the platform",
       "mapLabel": "Map & how to get there",
-      "mapNote": "We are based in Lisbon. The map shows the city; support is by email on business days.",
-      "mapTitle": "Lisbon map — BidRoom",
+      "mapNote": "Our registered office is in Santo Isidoro, Mafra. The map shows the area; support is by email on business days.",
+      "mapTitle": "Map of Santo Isidoro, Mafra — BidRoom",
       "mapOpen": "Open in OpenStreetMap"
     },
     "banner": {
@@ -4878,7 +4595,7 @@
     },
     "contact": {
       "titleTag": "Contact | BidRoom",
-      "description": "Reach BidRoom in Lisbon. We reply within 24 business hours."
+      "description": "Reach BidRoom in Mafra, Portugal. We reply within 24 business hours."
     },
     "notFound": {
       "titleTag": "Page not found · BidRoom",
@@ -4931,18 +4648,18 @@
     },
     "about": {
       "nav": "About",
-      "titleTag": "About BidRoom | Team in Lisbon",
-      "description": "BidRoom is a premium auction marketplace based in Lisbon. Meet the story and the people.",
+      "titleTag": "About BidRoom | Operated from Mafra, Portugal",
+      "description": "BidRoom is a premium auction marketplace operated from Mafra, in the Lisbon district. Meet the story and the people.",
       "eyebrow": "About us",
       "title": "An auction marketplace, made in Portugal",
       "lead": "BidRoom connects buyers and sellers of special pieces — watches, jewellery, art and more — with live bidding and protected payments.",
       "storyTitle": "The story",
-      "storyBody": "It was built to make online auctions as clear as a live room: public rules, transparent prices and direct payouts. We operate from Lisbon and serve the whole country.",
+      "storyBody": "It was built to make online auctions as clear as a live room: public rules, transparent prices and direct payouts. We operate from Mafra, in the Lisbon district, and serve the whole country.",
       "teamLabel": "Team",
       "teamTitle": "Who is behind it",
       "teamNote": "We show real people from the company — no stock photos. Operations share the same support inbox.",
       "whereTitle": "Where we are",
-      "whereBody": "Based in Lisbon. Email support on business days, with a reply within 24 hours.",
+      "whereBody": "Based in Mafra, Lisbon district. Email support on business days, with a reply within 24 hours.",
       "contactCta": "Contact BidRoom",
       "p1": {
         "name": "José Cândido",

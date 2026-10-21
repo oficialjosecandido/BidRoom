@@ -77,6 +77,28 @@
               <div class="cic-sub">{{ 'legal.contact.addressLine' | translate }}</div>
             </div>
           </div>
+          <!-- DL 7/2004 art. 10 and CSC art. 171: a trading site must show the
+               denomination, NIPC, registered seat, share capital and registry
+               details. Leaving these out is what made a partner check the RNPC,
+               find nothing, and walk away. -->
+          <div class="cic-row">
+            <span class="cic-ico">🧾</span>
+            <div>
+              <div class="cic-label">{{ 'legal.contact.nipcLabel' | translate }}</div>
+              <div class="cic-val">{{ 'legal.contact.nipcVal' | translate }}</div>
+              <div class="cic-sub">{{ 'legal.contact.capitalLabel' | translate }}: {{ 'legal.contact.capitalVal' | translate }}</div>
+            </div>
+          </div>
+          <div class="cic-row">
+            <span class="cic-ico">📜</span>
+            <div>
+              <div class="cic-label">{{ 'legal.contact.registryLabel' | translate }}</div>
+              <div class="cic-val">{{ 'legal.contact.registryVal' | translate }}</div>
+              <div class="cic-sub">
+                <a href="https://publicacoes.mj.pt/Pesquisa.aspx" target="_blank" rel="noopener noreferrer">publicacoes.mj.pt</a>
+              </div>
+            </div>
+          </div>
           <div class="cic-row">
             <span class="cic-ico">🕐</span>
             <div>
