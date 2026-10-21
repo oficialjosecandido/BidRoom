@@ -24,10 +24,13 @@ export const GIVEAWAY_EXCLUDED_IDS = ['vehicles', 'real-estate', 'wine-spirits']
  * every subCategory string is looked up under addListing.subcategories.*.
  *
  * Animal-derived goods are deliberately absent. Taxidermy, hunting trophies,
- * ivory, horn, real fur, exotic skins, tortoiseshell, protected coral and
- * mounted insects are prohibited, which is why the archaeology category is
- * fossils, minerals and antiquities only and carries no natural-history
- * specimens — see PROHIBITED_PATTERNS in backend/src/utils/contentFilter.js.
+ * ivory, rhino horn, tortoiseshell, protected-species fur, protected coral and
+ * mounted insects are prohibited outright, which is why the archaeology category
+ * is fossils, minerals and antiquities only and carries no natural-history
+ * specimens. Exotic skins are restricted rather than banned — permitted with
+ * CITES papers — so there is no subcategory inviting them either, and a
+ * reviewer checks the documents. See PROHIBITED_PATTERNS in
+ * backend/src/utils/contentFilter.js, which flags for review and never refuses.
  */
 export const CATEGORIES: Category[] = [
   {

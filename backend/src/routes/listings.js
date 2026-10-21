@@ -27,7 +27,7 @@ const { notifyFollowersNewListing, notifyCategoryFollowersNewListing, notifySimi
 const { getReviewScoresForUser } = require('../services/reviewService');
 const { logAuctionCreated } = require('../services/bestOfferLogger');
 const Block = require('../models/Block');
-const { scanTexts, scanForContactInfo, describeContactInfoTypes, scanTextsForProhibitedContent, scanForAbusiveContent } = require('../utils/contentFilter');
+const { scanTexts, scanForContactInfo, describeContactInfoTypes, scanTextsForPolicyFlags, scanForAbusiveContent } = require('../utils/contentFilter');
 const { GIVEAWAY_EXCLUDED, normalizeCategory } = require('../config/categories');
 const { appendModerationAudit } = require('../services/moderationAuditService');
 const { scanListingText } = require('../services/contentSafetyService');
@@ -1533,13 +1533,23 @@ router.post(
       localizedText.descriptionFr,
       localizedText.descriptionEs,
     ].filter(Boolean);
-    const prohibitedCheck = scanTextsForProhibitedContent(localizedScanTexts);
-    if (prohibitedCheck.prohibited) {
-      return res.status(400).json({
-        error: 'Prohibited item',
-        message: `This listing contains content that is not permitted on BidRoom (${prohibitedCheck.category}). If you believe this is a mistake, please contact support.`,
-        category: prohibitedCheck.category
-      });
+    // This used to be a 400. It is a flag now: the seller may publish whatever
+    // they like and Nexus decides, so a keyword match only tells the reviewer
+    // which part of the prohibited-items policy to check — the filter cannot
+    // tell an elephant tusk from an ivory-coloured vase, and refusing on its
+    // word cost legitimate sales with no queue to catch the mistake.
+    const policyScan = scanTextsForPolicyFlags(localizedScanTexts);
+    if (policyScan.flagged) {
+      listingContentWarning = {
+        severity: 'high',
+        policyCategories: policyScan.categories,
+        message: 'Your listing is under review because it may fall under our prohibited and restricted items policy. It will not be visible to buyers until our team approves it. If the item is permitted, having the paperwork ready (authenticity, provenance or CITES documents) will speed this up.'
+      };
+      appendModerationAudit({
+        subjectUserId: user._id,
+        actionType: 'policy_category_flagged',
+        metadata: { context: 'listing_create', categories: policyScan.categories, title: localizedText.title }
+      }).catch(() => {});
     }
 
     // Azure AI Content Safety text scan (blocklist + AI categories — complementary to local regex)
@@ -1582,8 +1592,9 @@ router.post(
         }).catch(() => {});
         return res.status(400).json({ error: 'Content policy violation', message: violation.message, violationAction: violation.action });
       }
-      // low: hold for moderation review — listing is NOT published until approved
-      listingContentWarning = {
+      // low: hold for moderation review — listing is NOT published until approved.
+      // A policy flag is already the more serious note, so it is not overwritten.
+      listingContentWarning = listingContentWarning || {
         severity: 'low',
         message: 'Your listing is currently under review because it contains mild language. It will not be visible to buyers until our moderation team approves it. Please keep your listings professional.'
       };
@@ -1744,6 +1755,7 @@ router.post(
         moderationWarning: {
           severity: listingContentWarning.severity,
           message: listingContentWarning.message,
+          ...(listingContentWarning.policyCategories && { policyCategories: listingContentWarning.policyCategories }),
           flaggedAt: new Date()
         }
       })
@@ -2133,6 +2145,24 @@ router.patch('/:id', authenticateToken, requireActiveAccount, async (req, res) =
         }
       } catch (aiErr) {
         logger.error('Azure Content Safety text scan error (non-blocking):', aiErr.message);
+      }
+
+      // An edit can introduce what the original draft did not, so record the
+      // flag here too. It does not change status: an already-approved listing
+      // stays live, and the mark is there for the reviewer who looks next.
+      const policyScanUpdate = scanTextsForPolicyFlags(textFields);
+      if (policyScanUpdate.flagged) {
+        updates.moderationWarning = {
+          severity: 'high',
+          policyCategories: policyScanUpdate.categories,
+          message: 'This listing may fall under our prohibited and restricted items policy and is awaiting a check by our team.',
+          flaggedAt: new Date()
+        };
+        appendModerationAudit({
+          subjectUserId: user._id,
+          actionType: 'policy_category_flagged',
+          metadata: { context: 'listing_update', categories: policyScanUpdate.categories, listingId: listing._id }
+        }).catch(() => {});
       }
 
       const abuseCheckUpdate = scanForAbusiveContent(textFields.join(' '));

@@ -196,6 +196,62 @@
   gap: 24px;
 }
 
+/* Automated policy flag. Amber by default, red at high severity — loud enough
+   to be read before the Approve button, not so loud it reads as a rejection. */
+.policy-flag {
+  background: #fffbeb;
+  border: 1px solid #fcd34d;
+  border-left: 4px solid #f59e0b;
+  border-radius: 12px;
+  padding: 18px 20px;
+  color: #451a03;
+
+  &--high {
+    background: #fef2f2;
+    border-color: #fca5a5;
+    border-left-color: #dc2626;
+    color: #450a0a;
+  }
+
+  &__head {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 15px;
+    margin-bottom: 8px;
+  }
+
+  &__icon { font-size: 16px; }
+
+  &__severity {
+    margin-left: auto;
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    padding: 2px 8px;
+    border-radius: 999px;
+    background: rgba(0, 0, 0, 0.07);
+  }
+
+  &__lead { margin: 0 0 8px; font-size: 14px; }
+
+  &__list {
+    margin: 0 0 10px;
+    padding-left: 20px;
+    font-size: 14px;
+    font-weight: 600;
+
+    li { margin-bottom: 2px; }
+  }
+
+  &__note {
+    margin: 0;
+    font-size: 13px;
+    opacity: 0.75;
+  }
+}
+
 .info-card {
   background: white;
   border-radius: 14px;

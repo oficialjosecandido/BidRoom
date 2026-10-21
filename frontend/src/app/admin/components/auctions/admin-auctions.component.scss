@@ -300,6 +300,22 @@ table.auctions-row-table {
     white-space: nowrap;
   }
 
+  /* Sits beside the status badge; the count tells the reviewer how much to read. */
+  .policy-flag-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 3px;
+    margin-left: 6px;
+    padding: 5px 8px;
+    border-radius: 999px;
+    font-size: 11px;
+    font-weight: 700;
+    background: #fef2f2;
+    color: #b91c1c;
+    border: 1px solid #fca5a5;
+    cursor: help;
+  }
+
   .status-badge {
     display: inline-flex;
     padding: 5px 10px;

@@ -138,6 +138,15 @@
                       <td class="num bids-cell">{{ bidCount(auction) }}</td>
                       <td class="tag-cell">
                         <span class="status-badge" [ngClass]="getStatusClass(auction.status)">{{ statusLabel(auction.status) }}</span>
+                        <!-- Lets a reviewer see which of the queue needs the
+                             closer look without opening every listing. -->
+                        @if (auction.moderationWarning?.policyCategories?.length) {
+                          <span
+                            class="policy-flag-badge"
+                            [title]="'May fall under: ' + auction.moderationWarning!.policyCategories!.join(', ')">
+                            ⚑ {{ auction.moderationWarning!.policyCategories!.length }}
+                          </span>
+                        }
                       </td>
                       <td class="date-cell">{{ formatDate(auction.endDate) }}</td>
                       <td class="actions-cell">

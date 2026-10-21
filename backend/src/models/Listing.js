@@ -108,10 +108,19 @@ const listingSchema = new mongoose.Schema({
     default: 'active',
     index: true
   },
-  /** Set when the listing is held for moderation review before going live. */
+  /**
+   * What the automated scan noticed, for the reviewer's attention in Nexus.
+   *
+   * It decides nothing: every listing is `pending_review` regardless, and an
+   * admin approves or rejects it. `policyCategories` names the areas of the
+   * prohibited-items policy the text touched — a pointer to what to check, not
+   * a finding that the listing breaks the policy, since the filter cannot tell
+   * an elephant tusk from a tusk-shaped ivory-coloured vase.
+   */
   moderationWarning: {
     severity: { type: String, enum: ['low', 'medium', 'high'] },
     message:  { type: String },
+    policyCategories: { type: [String], default: undefined },
     flaggedAt: { type: Date }
   },
   /**

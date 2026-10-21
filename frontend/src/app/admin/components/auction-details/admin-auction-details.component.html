@@ -71,6 +71,33 @@
       <!-- Auction Details -->
       @if (auction && !isLoading) {
 <div class="details-content">
+        <!-- What the automated scan flagged. A pointer for the reviewer, not a
+             verdict: the filter cannot tell an elephant tusk from an
+             ivory-coloured vase, which is why the wording says "may". -->
+        @if (auction.moderationWarning) {
+          <div class="policy-flag" [class.policy-flag--high]="auction.moderationWarning.severity === 'high'">
+            <div class="policy-flag__head">
+              <span class="policy-flag__icon" aria-hidden="true">⚑</span>
+              <strong>Flagged for review</strong>
+              <span class="policy-flag__severity">{{ auction.moderationWarning.severity }}</span>
+            </div>
+            @if (auction.moderationWarning.policyCategories?.length) {
+              <p class="policy-flag__lead">This listing may fall under the prohibited and restricted items policy. Check the item against:</p>
+              <ul class="policy-flag__list">
+                @for (cat of auction.moderationWarning.policyCategories; track cat) {
+                  <li>{{ cat }}</li>
+                }
+              </ul>
+              <p class="policy-flag__note">
+                Keyword match only — approve it if the item is permitted. Restricted items
+                (exotic skins, antiquities, precious metals) need the seller's documents.
+              </p>
+            } @else {
+              <p class="policy-flag__lead">{{ auction.moderationWarning.message }}</p>
+            }
+          </div>
+        }
+
         <!-- Auction Info Card -->
         <div class="info-card">
           <h2 class="card-title">Auction Information</h2>

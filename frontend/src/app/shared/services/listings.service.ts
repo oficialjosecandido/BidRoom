@@ -57,7 +57,17 @@ export interface Listing {
    */
   viewerIsSeller?: boolean;
   status: 'draft' | 'active' | 'pending_review' | 'ended' | 'cancelled';
-  moderationWarning?: { severity: 'low' | 'medium' | 'high'; message: string; flaggedAt: string };
+  /**
+   * What the automated scan noticed, for the reviewer. `policyCategories` names
+   * areas of the prohibited-items policy the text touched — a pointer to check,
+   * never a finding, so Nexus must not present it as a verdict.
+   */
+  moderationWarning?: {
+    severity: 'low' | 'medium' | 'high';
+    message: string;
+    policyCategories?: string[];
+    flaggedAt: string;
+  };
   /**
    * Outcome of the manual review every listing goes through before going live.
    * `reason` is written by an admin for the seller to read, so it is safe to display.
