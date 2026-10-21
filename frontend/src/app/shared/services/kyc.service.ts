@@ -4,7 +4,6 @@ import { BehaviorSubject, Observable } from 'rxjs';
 import { tap } from 'rxjs/operators';
 import { TranslateService } from '@ngx-translate/core';
 import { API_CONFIG } from '../config/api.config';
-import Swal from 'sweetalert2';
 
 export type KycStatus = 'none' | 'pending' | 'approved' | 'rejected';
 
@@ -38,13 +37,19 @@ export class KycService {
     return this.http.post<{ url: string; sessionId: string }>(`${this.apiUrl}/session`, {});
   }
 
+  /** SweetAlert2 is only needed when a KYC dialog opens — keep it off the listing LCP path. */
+  private async swal() {
+    return (await import('sweetalert2')).default;
+  }
+
   /** Redirect user to Stripe Identity verification. */
   startVerification(): void {
     this.createSession().subscribe({
       next: (res) => {
         window.location.href = res.url;
       },
-      error: (err) => {
+      error: async (err) => {
+        const Swal = await this.swal();
         Swal.fire({
           icon: 'error',
           title: this.translate.instant('dashboard.myAccount.kycUnavailableTitle'),
@@ -59,9 +64,11 @@ export class KycService {
    * Show the KYC gate dialog when a high-value action is blocked.
    * @param kycStatus current KYC status received in the 403 error
    */
-  openKycGate(kycStatus: KycStatus = 'none'): void {
+  async openKycGate(kycStatus: KycStatus = 'none'): Promise<void> {
+    const Swal = await this.swal();
+
     if (kycStatus === 'pending') {
-      Swal.fire({
+      await Swal.fire({
         icon: 'info',
         title: this.translate.instant('dashboard.myAccount.kycPendingTitle'),
         html: `<p style="color:#374151;font-size:0.95rem;line-height:1.5">${this.translate.instant('dashboard.myAccount.kycPending')}</p>`,
@@ -72,7 +79,7 @@ export class KycService {
     }
 
     if (kycStatus === 'rejected') {
-      Swal.fire({
+      const result = await Swal.fire({
         icon: 'warning',
         title: this.translate.instant('dashboard.myAccount.kycRejectedTitle'),
         html: `
@@ -84,14 +91,13 @@ export class KycService {
         confirmButtonText: this.translate.instant('dashboard.myAccount.kycTryAgain'),
         cancelButtonText: this.translate.instant('dashboard.settings.cancelBtn'),
         confirmButtonColor: '#7A4F84'
-      }).then(result => {
-        if (result.isConfirmed) this.startVerification();
       });
+      if (result.isConfirmed) this.startVerification();
       return;
     }
 
     const threshold = this.translate.instant('dashboard.myAccount.kycThresholdAmount');
-    Swal.fire({
+    const result = await Swal.fire({
       title: this.translate.instant('dashboard.myAccount.kycGateTitle'),
       html: `
         <div style="text-align:left;padding:4px 0">
@@ -114,8 +120,7 @@ export class KycService {
       cancelButtonText: this.translate.instant('dashboard.myAccount.kycNotNow'),
       confirmButtonColor: '#7A4F84',
       width: 480
-    }).then(result => {
-      if (result.isConfirmed) this.startVerification();
     });
+    if (result.isConfirmed) this.startVerification();
   }
 }

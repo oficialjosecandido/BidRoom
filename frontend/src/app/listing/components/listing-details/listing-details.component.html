@@ -2,20 +2,20 @@
 
 <app-header></app-header>
 
-<!-- LOADING -->
-@if (loading) {
+<!-- LOADING — only when we have nothing to show (avoid wiping SSR gallery on hydrate) -->
+@if (loading && !listing) {
   <div class="page-state"><div class="spinner"></div></div>
 }
 
 <!-- ERROR -->
-@if (error && !loading) {
+@if (error && !listing) {
   <div class="page-state page-error">
     <p>{{ error }}</p>
     <button class="btn-retry" (click)="goBack()">{{ 'listingDetails.backToListings' | translate }}</button>
   </div>
 }
 
-@if (listing && !loading && !error) {
+@if (listing && !error) {
 
 <!-- BREADCRUMB -->
 <div class="bc">
@@ -58,7 +58,7 @@
             fetchpriority="high"
             loading="eager"
             decoding="async"
-            (error)="onGalleryImgError($event, mainImageOriginal())" />
+            (error)="onGalleryImgError($event, mainImageOriginal(), true)" />
         } @else {
           <span class="main-img-em">🏷</span>
         }
@@ -90,14 +90,14 @@
           @for (img of listing.images; track $index; let i = $index) {
             <div class="thumb" [class.on]="i === activeImageIndex" (click)="setActiveImage(i)">
               <img
-                [src]="thumbImageSrc(img)"
+                [attr.src]="shouldLoadThumb(i) ? thumbImageSrc(img) : null"
                 [alt]="listing.title"
                 width="80"
                 height="80"
                 loading="lazy"
                 fetchpriority="low"
                 decoding="async"
-                (error)="onGalleryImgError($event, img)" />
+                (error)="onGalleryImgError($event, img, false)" />
             </div>
           }
         </div>

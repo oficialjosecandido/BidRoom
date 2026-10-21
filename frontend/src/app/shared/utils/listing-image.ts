@@ -43,9 +43,14 @@ export const LISTING_HERO_SIZES = '(max-width: 840px) calc(100vw - 32px), 800px'
 
 /**
  * If a variant 404s, try 480 → 960 WebP before falling back to the original.
- * Bind: (error)="onListingImageError($event, originalUrl)"
+ * Set `allowOriginal` only for the LCP hero — thumbs must not pull multi‑MB uploads.
+ * Bind: (error)="onListingImageError($event, originalUrl, allowOriginal)"
  */
-export function onListingImageError(event: Event, originalUrl: string): void {
+export function onListingImageError(
+  event: Event,
+  originalUrl: string,
+  allowOriginal = false
+): void {
   const img = event.target as HTMLImageElement | null;
   if (!img || !originalUrl) return;
 
@@ -68,6 +73,7 @@ export function onListingImageError(event: Event, originalUrl: string): void {
       return;
     }
   }
+  if (!allowOriginal) return;
   if (img.dataset['fallbackApplied'] === '1') return;
   img.dataset['fallbackApplied'] = '1';
   img.src = originalUrl;

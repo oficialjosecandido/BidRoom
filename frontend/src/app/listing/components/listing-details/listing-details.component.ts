@@ -86,9 +86,12 @@ export class ListingDetailsComponent implements OnInit, OnDestroy {
   readonly isLight = computed(() => this.themeService.effective() === 'light');
 
   listing: Listing | null = null;
-  loading = true;
+  /** False until a client fetch without TransferState — avoids wiping SSR HTML. */
+  loading = false;
   error: string | null = null;
   activeImageIndex = 0;
+  /** Only these thumb indices get a real src (others stay unloaded until clicked). */
+  private loadedThumbIndices = new Set<number>([0]);
   activeTab: 'description' | 'bids' | 'offers' | 'rules' = 'description';
   bids: Bid[] = [];
   bidsLoading = false;
@@ -240,6 +243,8 @@ export class ListingDetailsComponent implements OnInit, OnDestroy {
 
   private applyListing(listing: Listing): void {
     this.listing = listing;
+    this.activeImageIndex = 0;
+    this.loadedThumbIndices = new Set<number>([0]);
     this.inWatchlist = !!listing.inWatchlist;
     this.updateIsOwnListing();
     this.loading = false;
@@ -784,7 +789,13 @@ export class ListingDetailsComponent implements OnInit, OnDestroy {
   }
 
   setActiveImage(index: number): void {
+    this.loadedThumbIndices.add(index);
     this.activeImageIndex = index;
+    this.cdr.markForCheck();
+  }
+
+  shouldLoadThumb(index: number): boolean {
+    return this.loadedThumbIndices.has(index) || index === this.activeImageIndex;
   }
 
   mainImageSrc(): string {
@@ -809,8 +820,8 @@ export class ListingDetailsComponent implements OnInit, OnDestroy {
     return listingImageSrc(url, 'thumb');
   }
 
-  onGalleryImgError(event: Event, originalUrl: string): void {
-    onListingImageError(event, originalUrl);
+  onGalleryImgError(event: Event, originalUrl: string, allowOriginal = false): void {
+    onListingImageError(event, originalUrl, allowOriginal);
   }
 
 

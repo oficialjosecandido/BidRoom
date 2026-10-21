@@ -66,7 +66,7 @@ app.use(
       if (HASHED_ASSET.test(filePath)) {
         res.setHeader('Cache-Control', 'public, max-age=31536000, immutable');
       } else if (I18N_ASSET.test(filePath)) {
-        res.setHeader('Cache-Control', 'public, max-age=86400, stale-while-revalidate=604800');
+        res.setHeader('Cache-Control', 'public, max-age=604800, stale-while-revalidate=86400');
       } else {
         res.setHeader('Cache-Control', 'public, max-age=3600');
       }
