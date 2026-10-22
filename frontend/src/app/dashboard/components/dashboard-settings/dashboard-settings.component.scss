@@ -568,6 +568,48 @@
   &:hover:not(:disabled) { opacity: 0.9; }
 }
 
+/* Quiet account-deletion entry — no card, no icon, easy to miss on purpose. */
+.delete-account-foot {
+  margin: 36px 0 8px;
+  text-align: center;
+}
+
+.delete-account-link {
+  background: none;
+  border: none;
+  padding: 0;
+  font-size: 12px;
+  font-weight: 400;
+  color: var(--dim, #aaa);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+  cursor: pointer;
+
+  &:hover {
+    color: var(--sub, #888);
+  }
+}
+
+.delete-account-confirm-label {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-top: 14px;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--sub, #666);
+
+  input {
+    font: inherit;
+    font-weight: 400;
+    color: var(--text, #1a1a1a);
+    border: 1px solid var(--line, rgba(0, 0, 0, 0.12));
+    border-radius: 8px;
+    padding: 10px 12px;
+    background: var(--bg, #fff);
+  }
+}
+
 @media (max-width: 900px) {
   .settings-row--triple { grid-template-columns: 1fr; }
 }

@@ -431,6 +431,40 @@ router.post('/dsa-warning-response', authenticateToken, async (req, res) => {
 });
 
 /**
+ * Self-service account deletion (RGPD). Body: { confirmation: "DELETE" }.
+ * Blocked while the user has open transactions or disputes.
+ * Exposed as DELETE /me and POST /me/delete (some proxies strip DELETE bodies).
+ */
+async function handleDeleteOwnAccount(req, res) {
+  const { deleteOwnAccount, AccountDeletionError } = require('../services/accountDeletionService');
+  try {
+    const confirmation = String(req.body?.confirmation || '').trim().toUpperCase();
+    if (confirmation !== 'DELETE') {
+      return res.status(400).json({
+        error: 'confirmation_required',
+        message: 'Type DELETE to confirm account deletion.'
+      });
+    }
+
+    const customer = await Customer.findOne({ uid: req.user.uid }).select('_id uid').lean();
+    if (!customer) return res.status(404).json({ error: 'User not found' });
+
+    const io = req.app.get('io') || null;
+    await deleteOwnAccount({ userId: customer._id, uid: customer.uid || req.user.uid, io });
+    return res.json({ ok: true });
+  } catch (err) {
+    if (err instanceof AccountDeletionError) {
+      return res.status(err.status).json({ error: err.code, message: err.message });
+    }
+    logger.error('Account self-deletion error:', err);
+    res.status(500).json({ error: 'Failed to delete account' });
+  }
+}
+
+router.delete('/me', authenticateToken, handleDeleteOwnAccount);
+router.post('/me/delete', authenticateToken, handleDeleteOwnAccount);
+
+/**
  * GET /api/customers/payment-config
  * Returns the authenticated seller's payment configuration.
  */

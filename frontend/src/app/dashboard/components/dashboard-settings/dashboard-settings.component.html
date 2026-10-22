@@ -699,6 +699,13 @@
     </div>
     </div>
   </div>
+
+  <!-- Deliberately quiet: RGPD requires a path to erase the account, not a spotlight. -->
+  <p class="delete-account-foot">
+    <button type="button" class="delete-account-link" (click)="openDeleteAccountModal()">
+      {{ 'dashboard.settings.deleteAccount.link' | translate }}
+    </button>
+  </p>
 </div>
 
 @if (removeModalMethod) {
@@ -726,6 +733,49 @@
         </button>
         <button type="button" class="action-btn pm-remove-confirm" (click)="confirmRemoveCard()" [disabled]="!!removingPaymentId">
           {{ removingPaymentId ? ('dashboard.settings.paymentMethod.removing' | translate) : ('dashboard.settings.paymentMethod.removeConfirmBtn' | translate) }}
+        </button>
+      </div>
+    </div>
+  </div>
+}
+
+@if (showDeleteAccountModal) {
+  <div class="modal-overlay" (click)="closeDeleteAccountModal()">
+    <div class="modal-content delete-account-modal" (click)="$event.stopPropagation()" role="dialog" aria-modal="true"
+         [attr.aria-label]="'dashboard.settings.deleteAccount.title' | translate">
+      <div class="modal-header">
+        <h3 class="modal-title">{{ 'dashboard.settings.deleteAccount.title' | translate }}</h3>
+        <button type="button" class="modal-close" (click)="closeDeleteAccountModal()" [disabled]="deleteAccountSaving" aria-label="Close">×</button>
+      </div>
+      <div class="modal-body">
+        <p class="pm-remove-desc">{{ 'dashboard.settings.deleteAccount.body' | translate }}</p>
+        <p class="pm-remove-desc">{{ 'dashboard.settings.deleteAccount.confirmHint' | translate }}</p>
+        <label class="delete-account-confirm-label">
+          <span>{{ 'dashboard.settings.deleteAccount.confirmLabel' | translate }}</span>
+          <input
+            type="text"
+            name="deleteConfirm"
+            autocomplete="off"
+            [(ngModel)]="deleteAccountConfirm"
+            [disabled]="deleteAccountSaving"
+            [attr.placeholder]="'dashboard.settings.deleteAccount.confirmPlaceholder' | translate" />
+        </label>
+        @if (deleteAccountError) {
+          <p class="pm-remove-error">{{ deleteAccountError }}</p>
+        }
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="action-btn action-btn-ghost" (click)="closeDeleteAccountModal()" [disabled]="deleteAccountSaving">
+          {{ 'dashboard.settings.deleteAccount.cancel' | translate }}
+        </button>
+        <button
+          type="button"
+          class="action-btn pm-remove-confirm"
+          (click)="confirmDeleteAccount()"
+          [disabled]="deleteAccountSaving || deleteAccountConfirm.trim().toUpperCase() !== 'DELETE'">
+          {{ deleteAccountSaving
+            ? ('dashboard.settings.deleteAccount.deleting' | translate)
+            : ('dashboard.settings.deleteAccount.confirmBtn' | translate) }}
         </button>
       </div>
     </div>

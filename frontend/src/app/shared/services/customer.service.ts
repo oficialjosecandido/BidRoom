@@ -142,6 +142,11 @@ export class CustomerService {
     return this.http.put<{ paymentConfig: SellerPaymentConfig }>(`${this.apiUrl}/payment-config`, config);
   }
 
+  /** Permanently close the signed-in account. confirmation must be the string DELETE. */
+  deleteAccount(confirmation: string): Observable<{ ok: boolean }> {
+    return this.http.post<{ ok: boolean }>(`${this.apiUrl}/me/delete`, { confirmation });
+  }
+
   updateSellerCompliance(payload: Record<string, unknown>): Observable<{
     sellerClassification: string;
     professionalVerificationStatus: string;

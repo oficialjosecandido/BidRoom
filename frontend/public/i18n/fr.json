@@ -2441,7 +2441,21 @@
       "tosText": "J'autorise BidRoom à transmettre mes informations à Stripe pour la vérification d'identité et le traitement des virements, et j'accepte le",
       "updateBank": "Mettre à jour le compte bancaire",
       "updateDetails": "Mettre à jour les informations",
-      "verifyingDetails": "Vos informations ont été envoyées et sont en cours de vérification par Stripe. Cela prend généralement quelques minutes."
+      "verifyingDetails": "Vos informations ont été envoyées et sont en cours de vérification par Stripe. Cela prend généralement quelques minutes.",
+      "deleteAccount": {
+        "link": "Supprimer le compte",
+        "title": "Supprimer le compte",
+        "body": "Cette action est définitive. Vos annonces actives seront annulées, l’accès sera révoqué et les données personnelles anonymisées. Les registres fiscaux des ventes terminées peuvent être conservés conformément à la loi.",
+        "confirmHint": "Pour confirmer, saisissez DELETE dans la case ci-dessous.",
+        "confirmLabel": "Confirmation",
+        "confirmPlaceholder": "DELETE",
+        "cancel": "Annuler",
+        "confirmBtn": "Supprimer définitivement",
+        "deleting": "Suppression…",
+        "errorOpenTransactions": "Vous avez encore des achats ou ventes en cours. Terminez-les ou annulez-les avant de supprimer le compte.",
+        "errorOpenDisputes": "Vous avez un litige ouvert. Il doit être résolu avant de supprimer le compte.",
+        "errorGeneric": "Impossible de supprimer le compte. Réessayez ou contactez le support."
+      }
     },
     "myAuctions": {
       "title": "Mes Annonces",

@@ -2554,7 +2554,21 @@
       "deliveryAddressClear": "Limpar morada",
       "deliveryAddressIncomplete": "Preencha a morada, cidade, código postal e país.",
       "deliveryAddressStateRequired": "O distrito / região é obrigatório para este país.",
-      "deliveryAddressSaveError": "Não foi possível guardar a morada. Tente novamente."
+      "deliveryAddressSaveError": "Não foi possível guardar a morada. Tente novamente.",
+      "deleteAccount": {
+        "link": "Eliminar conta",
+        "title": "Eliminar conta",
+        "body": "Esta acção é permanente. Os seus anúncios activos serão cancelados, o acesso será revogado e os dados pessoais serão anonimizados. Registos fiscais de vendas concluídas podem ser mantidos conforme a lei.",
+        "confirmHint": "Para confirmar, escreva DELETE na caixa abaixo.",
+        "confirmLabel": "Confirmação",
+        "confirmPlaceholder": "DELETE",
+        "cancel": "Cancelar",
+        "confirmBtn": "Eliminar definitivamente",
+        "deleting": "A eliminar…",
+        "errorOpenTransactions": "Ainda tem compras ou vendas em curso. Conclua-as ou cancele-as antes de eliminar a conta.",
+        "errorOpenDisputes": "Tem uma disputa aberta. Tem de ser resolvida antes de eliminar a conta.",
+        "errorGeneric": "Não foi possível eliminar a conta. Tente novamente ou contacte o apoio."
+      }
     },
     "sellerPaymentConfig": {
       "title": "Métodos de Pagamento Alternativos",

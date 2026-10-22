@@ -2554,7 +2554,21 @@
       "deliveryAddressClear": "Clear address",
       "deliveryAddressIncomplete": "Please fill in street, city, postal code and country.",
       "deliveryAddressStateRequired": "State / region is required for this country.",
-      "deliveryAddressSaveError": "Could not save delivery address. Please try again."
+      "deliveryAddressSaveError": "Could not save delivery address. Please try again.",
+      "deleteAccount": {
+        "link": "Delete account",
+        "title": "Delete account",
+        "body": "This action is permanent. Your active listings will be cancelled, access will be revoked, and personal data will be anonymised. Fiscal records of completed sales may be kept as required by law.",
+        "confirmHint": "To confirm, type DELETE in the box below.",
+        "confirmLabel": "Confirmation",
+        "confirmPlaceholder": "DELETE",
+        "cancel": "Cancel",
+        "confirmBtn": "Delete permanently",
+        "deleting": "Deleting…",
+        "errorOpenTransactions": "You still have open purchases or sales. Finish or cancel them before deleting your account.",
+        "errorOpenDisputes": "You have an open dispute. It must be resolved before the account can be deleted.",
+        "errorGeneric": "Could not delete the account. Try again or contact support."
+      }
     },
     "sellerPaymentConfig": {
       "title": "Alternative Payment Methods",

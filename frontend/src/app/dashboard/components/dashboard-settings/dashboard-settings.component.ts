@@ -872,4 +872,55 @@ export class DashboardSettingsComponent implements OnInit, OnDestroy {
       }
     });
   }
+
+  // ── Delete account (quiet foot link) ──────────────────────────────────────
+
+  showDeleteAccountModal = false;
+  deleteAccountConfirm = '';
+  deleteAccountSaving = false;
+  deleteAccountError: string | null = null;
+
+  openDeleteAccountModal(): void {
+    this.showDeleteAccountModal = true;
+    this.deleteAccountConfirm = '';
+    this.deleteAccountError = null;
+  }
+
+  closeDeleteAccountModal(): void {
+    if (this.deleteAccountSaving) return;
+    this.showDeleteAccountModal = false;
+    this.deleteAccountConfirm = '';
+    this.deleteAccountError = null;
+  }
+
+  confirmDeleteAccount(): void {
+    if (this.deleteAccountSaving) return;
+    const confirmation = this.deleteAccountConfirm.trim();
+    if (confirmation.toUpperCase() !== 'DELETE') return;
+
+    this.deleteAccountSaving = true;
+    this.deleteAccountError = null;
+    this.customerService.deleteAccount(confirmation).subscribe({
+      next: () => {
+        this.deleteAccountSaving = false;
+        this.showDeleteAccountModal = false;
+        this.authService.logout().subscribe({
+          next: () => this.router.navigate(['/']),
+          error: () => this.router.navigate(['/'])
+        });
+      },
+      error: (err) => {
+        this.deleteAccountSaving = false;
+        const code = err?.error?.error;
+        if (code === 'open_transactions') {
+          this.deleteAccountError = this.translate.instant('dashboard.settings.deleteAccount.errorOpenTransactions');
+        } else if (code === 'open_disputes') {
+          this.deleteAccountError = this.translate.instant('dashboard.settings.deleteAccount.errorOpenDisputes');
+        } else {
+          this.deleteAccountError =
+            err?.error?.message || this.translate.instant('dashboard.settings.deleteAccount.errorGeneric');
+        }
+      }
+    });
+  }
 }
