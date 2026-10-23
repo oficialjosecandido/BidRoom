@@ -91,7 +91,7 @@ az webapp config appsettings set \
   --settings \
     NODE_ENV=production \
     PORT=8080 \
-    WEBSITE_NODE_DEFAULT_VERSION="22.x" \
+    WEBSITE_NODE_DEFAULT_VERSION="22.23.4" \
     SCM_DO_BUILD_DURING_DEPLOYMENT=false \
   -o table
 ok "Base settings applied"

@@ -19,7 +19,8 @@ on:
       - '.github/workflows/ci.yml'
 
 env:
-  NODE_VERSION: '20.x'
+  # CVE-2026-111497 (Brotli RCE) — pin patched 22 LTS; 20.x is EOL with no fix.
+  NODE_VERSION: '22.23.4'
 
 jobs:
   backend-test:

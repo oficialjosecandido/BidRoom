@@ -86,7 +86,7 @@ az webapp config appsettings set \
   -n "$APP_NAME" -g "$RESOURCE_GROUP" \
   --settings \
     NODE_ENV=production \
-    WEBSITE_NODE_DEFAULT_VERSION="20.x" \
+    WEBSITE_NODE_DEFAULT_VERSION="22.23.4" \
     NG_ALLOWED_HOSTS="$APP_NAME.azurewebsites.net,bidroom.pt" \
     SCM_DO_BUILD_DURING_DEPLOYMENT=false \
   -o table
