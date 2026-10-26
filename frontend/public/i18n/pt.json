@@ -5004,6 +5004,11 @@
         "role": "Fundador",
         "bio": "Responsável pelo produto e pela operação da BidRoom em Portugal."
       }
+    },
+    "listings": {
+      "titleTag": "Leilões activos | BidRoom",
+      "description": "Explore leilões e melhores propostas activos no BidRoom. Relógios, coleccionáveis, arte e mais — com pagamentos seguros.",
+      "breadcrumb": "Leilões"
     }
   }
 }

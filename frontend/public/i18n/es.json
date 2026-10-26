@@ -4788,6 +4788,11 @@
         "role": "Fundador",
         "bio": "Responsable del producto y de la operación de BidRoom en Portugal."
       }
+    },
+    "listings": {
+      "titleTag": "Subastas activas | BidRoom",
+      "description": "Explora subastas y mejores ofertas activas en BidRoom. Relojes, coleccionables, arte y más — con pagos seguros.",
+      "breadcrumb": "Subastas"
     }
   },
   "legal": {

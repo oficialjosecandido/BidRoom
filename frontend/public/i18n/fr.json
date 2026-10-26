@@ -4788,6 +4788,11 @@
         "role": "Fondateur",
         "bio": "Responsable du produit et des opérations BidRoom au Portugal."
       }
+    },
+    "listings": {
+      "titleTag": "Enchères en cours | BidRoom",
+      "description": "Parcourez les enchères et meilleures offres actives sur BidRoom. Montres, objets de collection, art et plus — paiements sécurisés.",
+      "breadcrumb": "Enchères"
     }
   },
   "legal": {

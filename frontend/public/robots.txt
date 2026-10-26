@@ -1,11 +1,15 @@
 User-agent: *
 Allow: /
 
-# Private — keep crawlers out
+# Private / app surfaces — keep crawlers out (intentional)
 Disallow: /nexus/
 Disallow: /dashboard/
 Disallow: /api/
 Disallow: /checkout/
 Disallow: /auth/
+Disallow: /private-room/
+Disallow: /listing/add
+Disallow: /email-preferences
+Disallow: /notifications/unsubscribe
 
 Sitemap: https://www.bidroom.pt/sitemap.xml

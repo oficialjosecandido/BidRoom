@@ -13,6 +13,11 @@ export const serverRoutes: ServerRoute[] = [
   { path: 'landing/cookies',           renderMode: RenderMode.Server },
   { path: 'landing/prohibited-items',  renderMode: RenderMode.Server },
   { path: 'landing/terms-conditions',  renderMode: RenderMode.Server },
+  // Static listing paths MUST come before listing/:slug — otherwise SSR treats
+  // /listing/list as slug "list", returns thin/error HTML with the homepage
+  // canonical, and Google Search Console reports Soft 404 / crawled-not-indexed.
+  { path: 'listing/list',              renderMode: RenderMode.Server },
+  { path: 'listing/categories',        renderMode: RenderMode.Server },
   { path: 'listing/:slug',             renderMode: RenderMode.Server },
   { path: 'seller/:id',                renderMode: RenderMode.Server },
   { path: 'notifications/unsubscribe', renderMode: RenderMode.Server },

@@ -5004,6 +5004,11 @@
         "role": "Founder",
         "bio": "Responsible for BidRoom’s product and operations in Portugal."
       }
+    },
+    "listings": {
+      "titleTag": "Live auctions | BidRoom",
+      "description": "Browse live auctions and best offers on BidRoom. Watches, collectibles, art and more — with secure payments.",
+      "breadcrumb": "Auctions"
     }
   }
 }

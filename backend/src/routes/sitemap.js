@@ -9,12 +9,17 @@ const BASE_URL = 'https://www.bidroom.pt';
 // /trust were listed here but never existed as routes, so Google was crawling
 // three 404s on every sitemap fetch.
 const STATIC_PAGES = [
-  { path: '',                        changefreq: 'weekly',  priority: '1.0' },
-  { path: 'listing/list',            changefreq: 'hourly',  priority: '0.9' },
-  { path: 'landing/how-it-works',    changefreq: 'monthly', priority: '0.7' },
-  { path: 'landing/trust',           changefreq: 'monthly', priority: '0.6' },
-  { path: 'landing/faq',             changefreq: 'monthly', priority: '0.5' },
-  { path: 'blog',                    changefreq: 'daily',   priority: '0.8' },
+  { path: '',                          changefreq: 'weekly',  priority: '1.0' },
+  { path: 'listing/list',              changefreq: 'hourly',  priority: '0.9' },
+  { path: 'landing/how-it-works',      changefreq: 'monthly', priority: '0.7' },
+  { path: 'landing/trust',             changefreq: 'monthly', priority: '0.6' },
+  { path: 'landing/faq',               changefreq: 'monthly', priority: '0.5' },
+  { path: 'landing/contact',           changefreq: 'monthly', priority: '0.5' },
+  { path: 'landing/privacy-policy',    changefreq: 'yearly',  priority: '0.3' },
+  { path: 'landing/cookies',           changefreq: 'yearly',  priority: '0.3' },
+  { path: 'landing/terms-conditions',  changefreq: 'yearly',  priority: '0.3' },
+  { path: 'landing/prohibited-items',  changefreq: 'yearly',  priority: '0.3' },
+  { path: 'blog',                      changefreq: 'daily',   priority: '0.8' },
 ];
 
 function xmlEscape(str) {

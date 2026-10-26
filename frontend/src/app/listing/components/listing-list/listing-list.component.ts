@@ -11,6 +11,7 @@ import { FooterComponent } from '../../../shared/components/footer/footer.compon
 import { ListingsService, Listing, ListingsQueryParams } from '../../../shared/services/listings.service';
 import { WatchlistService } from '../../../shared/services/watchlist.service';
 import { AuthService } from '../../../auth/services/auth.service';
+import { SeoService } from '../../../shared/services/seo.service';
 import { CATEGORIES, Category } from '../../../shared/config/categories.config';
 import { take } from 'rxjs/operators';
 import { DisplayPricePipe } from '../../../shared/pipes/display-price.pipe';
@@ -68,6 +69,7 @@ export class ListingListComponent implements OnInit, OnDestroy {
   private watchlistService = inject(WatchlistService);
   private authService = inject(AuthService);
   private translate = inject(TranslateService);
+  private seo = inject(SeoService);
   private destroyRef = inject(DestroyRef);
   private cdr = inject(ChangeDetectorRef);
   private isBrowser = isPlatformBrowser(inject(PLATFORM_ID));
@@ -165,6 +167,22 @@ export class ListingListComponent implements OnInit, OnDestroy {
   }
 
   ngOnInit(): void {
+    this.translate.get([
+      'seoPages.listings.titleTag',
+      'seoPages.listings.description',
+      'seoPages.listings.breadcrumb',
+    ]).subscribe(t => {
+      this.seo.setPage({
+        title: t['seoPages.listings.titleTag'],
+        description: t['seoPages.listings.description'],
+        path: '/listing/list',
+      });
+      this.seo.setBreadcrumbs([
+        { name: 'BidRoom', path: '/' },
+        { name: t['seoPages.listings.breadcrumb'], path: '/listing/list' },
+      ]);
+    });
+
     this.route.queryParams.pipe(takeUntilDestroyed(this.destroyRef)).subscribe(params => {
       this.selectedCategory = params['category'] || '';
       this.selectedSubCategory = params['subCategory'] || '';
