@@ -1934,7 +1934,7 @@ router.get('/damage-claims', authenticateToken, requireAdmin, async (req, res) =
     const PAGE_SIZE = 20;
     const page = Math.max(1, parseInt(req.query.page) || 1);
     const filter = {};
-    if (req.query.status) filter.status = req.query.status;
+    if (typeof req.query.status === 'string') filter.status = req.query.status;
 
     const [claims, total] = await Promise.all([
       DamageClaim.find(filter)

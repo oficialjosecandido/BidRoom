@@ -44,7 +44,7 @@ jobs:
           cd backend
           npm ci
 
-      - name: Run smoke tests
+      - name: Run unit tests
         timeout-minutes: 5
         run: |
           cd backend
@@ -77,4 +77,36 @@ jobs:
         run: |
           cd frontend
           npm run build
+
+  audit:
+    name: Dependency Audit
+    runs-on: ubuntu-latest
+    if: contains(github.event.head_commit.message, '[skip ci]') == false
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+
+      # Gates on critical only, deliberately. Both trees carry a long tail of
+      # high/moderate advisories inside transitive deps (OpenTelemetry, the
+      # Firebase and socket.io stacks) whose fixes are not ours to ship, so a
+      # --audit-level=high gate would be red on every PR and get ignored within
+      # a week. Critical is the level where we stop and deal with it.
+      #
+      # --omit=dev because a build-time advisory does not reach production, and
+      # no install is needed: npm audit reads the lockfile.
+      - name: Audit backend dependencies
+        run: |
+          cd backend
+          npm audit --audit-level=critical --omit=dev
+
+      - name: Audit frontend dependencies
+        run: |
+          cd frontend
+          npm audit --audit-level=critical --omit=dev
 

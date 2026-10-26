@@ -47,6 +47,7 @@ const { parseScheduledStart, scheduleBlock, ListingScheduleError } = require('..
 const { formatBidPublic } = require('../utils/bidFormat');
 const { createLimiter, clientKey, guestOnly } = require('../middleware/rateLimiters');
 const { issueGuestSession } = require('../utils/guestSession');
+const { queryString, publicBrowseStatus } = require('../utils/queryFilters');
 const { resolveGuestSeller, GuestSellerError } = require('../services/guestSellerService');
 const { resolveCustomerForToken, handleAccountClaimError } = require('../services/accountClaimService');
 
@@ -239,20 +240,23 @@ router.get('/', optionalAuth, catalogueLimiter, async (req, res) => {
     // Build query
     const query = {};
     
-    if (status) {
-      query.status = status;
-    }
-    
-    if (category) {
-      query.category = category;
+    // Never let the caller name the status: `?status=pending_review` would read
+    // out the moderation queue, which is the one thing it exists to hold back.
+    query.status = publicBrowseStatus(status);
+
+    const categoryFilter = queryString(category);
+    if (categoryFilter) {
+      query.category = categoryFilter;
     }
 
-    if (subCategory) {
-      query.subCategory = subCategory;
+    const subCategoryFilter = queryString(subCategory);
+    if (subCategoryFilter) {
+      query.subCategory = subCategoryFilter;
     }
-    
-    if (listingType) {
-      query.listingType = listingType;
+
+    const listingTypeFilter = queryString(listingType);
+    if (listingTypeFilter) {
+      query.listingType = listingTypeFilter;
     }
 
     if (isFeatured === 'true') {
@@ -286,7 +290,7 @@ router.get('/', optionalAuth, catalogueLimiter, async (req, res) => {
         'fair': 'Used - Fair',
         'for-parts': 'For Parts or Not Working'
       };
-      const selectedConditions = condition.split(',').map(c => conditionMap[c.trim()]).filter(Boolean);
+      const selectedConditions = queryString(condition).split(',').map(c => conditionMap[c.trim()]).filter(Boolean);
       if (selectedConditions.length > 0) {
         query.condition = { $in: selectedConditions };
       }
@@ -299,7 +303,7 @@ router.get('/', optionalAuth, catalogueLimiter, async (req, res) => {
         regional: ['calculated'],
         'local-pickup': ['local-pickup']
       };
-      const selectedShipping = shipping.split(',').map(s => s.trim()).filter(Boolean);
+      const selectedShipping = queryString(shipping).split(',').map(s => s.trim()).filter(Boolean);
       const shippingOptions = [...new Set(selectedShipping.flatMap(s =>
         (directOptions.has(s) ? [s] : legacyShippingMap[s]) || []
       ))];

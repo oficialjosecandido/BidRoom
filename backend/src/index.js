@@ -12,6 +12,7 @@ require('dotenv').config();
 
 const logger = require('./utils/logger');
 const { createLimiter } = require('./middleware/rateLimiters');
+const { sanitizeMongo } = require('./middleware/sanitizeMongo');
 
 // Initialize Firebase Admin
 require('./config/firebaseAdmin');
@@ -227,6 +228,11 @@ app.post('/api/kyc/webhook', express.raw({ type: 'application/json' }), kycWebho
 
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
+
+// Must sit after the body parsers (it works on the parsed objects) and before
+// any route. Deliberately after the webhook handlers above, which keep a raw
+// Buffer body that no handler ever uses as a query.
+app.use(sanitizeMongo);
 
 // Rate limiters — backed by Redis when REDIS_HOST is set (the only correct
 // option once we run behind a horizontal scaler), in-memory otherwise.

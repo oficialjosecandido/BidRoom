@@ -99,7 +99,8 @@ router.get('/mine', authenticateToken, async (req, res) => {
  */
 router.get('/admin', authenticateToken, requireAdmin, async (req, res) => {
   try {
-    const { status = 'pending', page = '1', limit = '25' } = req.query;
+    const { page = '1', limit = '25' } = req.query;
+    const status = typeof req.query.status === 'string' ? req.query.status : 'pending';
     const filter = status === 'all' ? {} : { status };
     const total = await AccountAppeal.countDocuments(filter);
     const appeals = await AccountAppeal.find(filter)
