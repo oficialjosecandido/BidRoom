@@ -88,3 +88,9 @@ docs.zip
 # Kept in the ignore list in case Azure regenerates them locally.
 *publish-profile.xml
 *publish-profile.PublishSettings
+
+# Local Azure CLI session/cache (may contain tokens) and diagnostic scratch
+.azure-cli-tmp/
+.azure-cli-work/
+live-log.txt
+frontend-logs-extracted/

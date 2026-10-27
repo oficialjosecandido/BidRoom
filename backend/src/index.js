@@ -524,8 +524,21 @@ const startServer = async () => {
       if (e.code !== 27) logger.warn('Index drop (optional)', { error: e.message });
     }
 
-    // Connect to Redis (cache/state). Failures here are surfaced but not fatal.
-    await redisService.connect();
+    // Connect to Redis (cache/state) only when configured. Without REDIS_HOST the
+    // service would otherwise dial localhost, fail in production, and abort boot
+    // via process.exit — which is what took the API down after the Azure Cache
+    // for Redis was deleted. Failures with a configured host are also non-fatal.
+    if (process.env.REDIS_HOST) {
+      try {
+        await redisService.connect();
+      } catch (redisErr) {
+        logger.warn('Redis unavailable — continuing without cache', {
+          error: redisErr.message,
+        });
+      }
+    } else {
+      logger.info('REDIS_HOST not set — skipping Redis (in-memory rate limits / single-instance sockets)');
+    }
 
     // Attach socket.io Redis adapter so events are broadcast across all server instances.
     // Uses two dedicated pub/sub clients (required by the adapter API).
