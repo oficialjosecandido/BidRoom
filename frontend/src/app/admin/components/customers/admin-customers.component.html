@@ -84,7 +84,7 @@
               </thead>
               <tbody>
                 @for (c of customers; track c._id) {
-                  <tr>
+                  <tr class="clickable-row" (click)="openCustomer(c)">
                     <td class="customer-cell">
                       <div class="customer-avatar" [class]="avatarColor(c)">{{ initials(c) }}</div>
                       <span class="customer-name">{{ c.firstName }} {{ c.lastName }}</span>
@@ -131,7 +131,7 @@
                     </td>
                     <td class="date-cell">{{ formatDate(c.createdAt) }}</td>
                     <td class="date-cell muted">{{ formatDate(c.lastLogin) }}</td>
-                    <td class="actions-cell">
+                    <td class="actions-cell" (click)="$event.stopPropagation()">
                       <button
                         class="message-btn"
                         type="button"

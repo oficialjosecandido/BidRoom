@@ -102,6 +102,40 @@ export interface AdminCustomersQueryParams {
   status?: string;
 }
 
+export interface AdminCustomerDetails extends AdminCustomer {
+  slug?: string | null;
+  professionalVerificationStatus?: string | null;
+  professionalLegalName?: string | null;
+  professionalTradeName?: string | null;
+  professionalContactPhone?: string | null;
+}
+
+export interface AdminCustomerHistoryItem {
+  _id: string;
+  amount: number;
+  transactionStatus?: string;
+  status?: string;
+  paymentStatus?: string;
+  createdAt: string;
+  completedAt?: string | null;
+  listing?: {
+    _id: string;
+    title?: string;
+    slug?: string;
+    images?: string[];
+    status?: string;
+    auctionFormat?: string;
+  } | null;
+  seller?: { _id: string; firstName?: string; lastName?: string; email?: string } | null;
+  buyer?: { _id: string; firstName?: string; lastName?: string; email?: string } | null;
+}
+
+export interface AdminCustomerDetailsResponse {
+  customer: AdminCustomerDetails;
+  purchases: AdminCustomerHistoryItem[];
+  sales: AdminCustomerHistoryItem[];
+}
+
 export interface AdminTransactionsResponse {
   transactions: Transaction[];
   total: number;
@@ -469,6 +503,17 @@ export class AdminService {
     return this.http.post<{ success: boolean; message: string }>(
       `${this.apiUrl}/customers/${customerId}/unlock-content-restriction`,
       {}
+    );
+  }
+
+  getCustomerDetails(customerId: string): Observable<AdminCustomerDetailsResponse> {
+    return this.http.get<AdminCustomerDetailsResponse>(`${this.apiUrl}/customers/${customerId}`);
+  }
+
+  closeCustomer(customerId: string, reason?: string): Observable<{ success: boolean; message: string }> {
+    return this.http.post<{ success: boolean; message: string }>(
+      `${this.apiUrl}/customers/${customerId}/close`,
+      reason ? { reason } : {}
     );
   }
 

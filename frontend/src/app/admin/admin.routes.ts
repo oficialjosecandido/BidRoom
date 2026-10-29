@@ -23,6 +23,14 @@ export const adminRoutes: Routes = [
     canActivate: [AdminGuard]
   },
   {
+    path: 'customers/:id',
+    loadComponent: () =>
+      import('./components/customer-details/admin-customer-details.component').then(
+        (m) => m.AdminCustomerDetailsComponent
+      ),
+    canActivate: [AdminGuard]
+  },
+  {
     path: 'transactions',
     loadComponent: () => import('./components/transactions/admin-transactions.component').then(m => m.AdminTransactionsComponent),
     canActivate: [AdminGuard]

@@ -273,6 +273,16 @@
   &.type-private { background: #f1f5f9; color: #475569; }
 }
 
+// ── Clickable rows ────────────────────────────────────────────────────────────
+
+.clickable-row {
+  cursor: pointer;
+
+  &:hover td {
+    background: rgba(15, 23, 42, 0.025);
+  }
+}
+
 // ── Row actions ───────────────────────────────────────────────────────────────
 
 .actions-cell {

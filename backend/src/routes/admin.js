@@ -24,7 +24,7 @@ const GiveawayEntry = require('../models/GiveawayEntry');
 const { drawWinner, publicWinnerName, GiveawayError, publishDrawVideo, removeDrawVideo } = require('../services/giveawayService');
 const { detectDrawMediaMagic } = require('../utils/videoMagic');
 const DamageClaim = require('../models/DamageClaim');
-const { applyDisputeAccountOutcome } = require('../services/accountStatusService');
+const { applyDisputeAccountOutcome, closeUser } = require('../services/accountStatusService');
 const { applyDisputeVerdictImpact } = require('../services/reputationService');
 const { appendModerationAudit } = require('../services/moderationAuditService');
 const { approveListing, rejectListing, ReviewError } = require('../services/listingReviewService');
@@ -1172,6 +1172,105 @@ router.post('/customers/:id/unlock-content-restriction', authenticateToken, requ
   } catch (error) {
     logger.error('Error unlocking content restriction:', error);
     res.status(500).json({ error: 'Failed to unlock content restriction', message: error.message });
+  }
+});
+
+/**
+ * GET /api/admin/customers/:id
+ * Customer profile for Nexus detail page, plus purchase (as buyer) and sales (as seller) history.
+ */
+router.get('/customers/:id', authenticateToken, requireAdmin, async (req, res) => {
+  try {
+    if (!isValidObjectId(req.params.id)) {
+      return res.status(400).json({ error: 'Invalid user id' });
+    }
+
+    const customer = await Customer.findById(req.params.id)
+      .select(
+        'firstName lastName email accountStatus emailVerified reputationScore createdAt lastLogin ' +
+        'sellerClassification contentViolationCount contentRestrictedUntil slug ' +
+        'professionalVerificationStatus professionalLegalName professionalTradeName professionalContactPhone'
+      )
+      .lean();
+
+    if (!customer) {
+      return res.status(404).json({ error: 'User not found' });
+    }
+
+    const historySelect = 'amount transactionStatus status paymentStatus createdAt completedAt listing seller buyer';
+    const listingPopulate = { path: 'listing', select: 'title slug images status auctionFormat' };
+    const counterpartyPopulate = (field) => ({ path: field, select: 'firstName lastName email' });
+
+    const [purchases, sales] = await Promise.all([
+      Transaction.find({ buyer: customer._id })
+        .select(historySelect)
+        .populate(listingPopulate)
+        .populate(counterpartyPopulate('seller'))
+        .sort({ createdAt: -1 })
+        .limit(100)
+        .lean(),
+      Transaction.find({ seller: customer._id })
+        .select(historySelect)
+        .populate(listingPopulate)
+        .populate(counterpartyPopulate('buyer'))
+        .sort({ createdAt: -1 })
+        .limit(100)
+        .lean(),
+    ]);
+
+    res.json({ customer, purchases, sales });
+  } catch (error) {
+    logger.error('Error fetching customer details:', error);
+    res.status(500).json({ error: 'Failed to fetch customer', message: error.message });
+  }
+});
+
+/**
+ * POST /api/admin/customers/:id/close
+ * Permanently close (soft-delete) a customer account from Nexus.
+ */
+router.post('/customers/:id/close', authenticateToken, requireAdmin, async (req, res) => {
+  try {
+    if (!isValidObjectId(req.params.id)) {
+      return res.status(400).json({ error: 'Invalid user id' });
+    }
+
+    const user = await Customer.findById(req.params.id).select('_id accountStatus email firstName lastName');
+    if (!user) return res.status(404).json({ error: 'User not found' });
+    if (user.accountStatus === 'closed') {
+      return res.status(400).json({ error: 'Already closed', message: 'This account is already closed.' });
+    }
+
+    const reason = typeof req.body?.reason === 'string' ? req.body.reason.trim().slice(0, 500) : '';
+    const io = req.app.get('io');
+    const result = await closeUser(
+      user._id,
+      {
+        reason: reason || 'admin_close',
+        triggeredBy: 'admin',
+        adminEmail: req.user.email || null,
+      },
+      io
+    );
+
+    if (!result.updated) {
+      return res.status(400).json({
+        error: result.reason || 'close_failed',
+        message: 'Could not close this account.',
+      });
+    }
+
+    await appendModerationAudit({
+      subjectUserId: user._id,
+      actionType: 'account_closed',
+      performedByEmail: req.user.email || null,
+      metadata: { reason: reason || 'admin_close' },
+    }).catch(() => {});
+
+    res.json({ success: true, message: 'Account closed.' });
+  } catch (error) {
+    logger.error('Error closing customer account:', error);
+    res.status(500).json({ error: 'Failed to close account', message: error.message });
   }
 });
 

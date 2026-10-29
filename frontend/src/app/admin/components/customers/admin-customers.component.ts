@@ -144,4 +144,8 @@ export class AdminCustomersComponent implements OnInit {
       },
     });
   }
+
+  openCustomer(c: AdminCustomer): void {
+    void this.router.navigate(['/nexus/customers', c._id]);
+  }
 }

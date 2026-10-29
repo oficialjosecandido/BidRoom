@@ -1,0 +1,273 @@
+<div class="admin-layout">
+  <app-admin-sidebar />
+
+  <div class="admin-content">
+    <div class="customer-details">
+
+      <header class="page-header">
+        <button type="button" class="back-btn" (click)="goBack()">← Back to customers</button>
+        <p class="nexus-crumb">Nexus · Customers · Detail</p>
+        @if (customer) {
+          <div class="header-row">
+            <div class="header-identity">
+              <div class="customer-avatar lg" [class]="avatarColor(customer)">{{ initials(customer) }}</div>
+              <div>
+                <h1 class="page-title">{{ customer.firstName }} {{ customer.lastName }}</h1>
+                <p class="page-lead">{{ customer.email }}</p>
+              </div>
+            </div>
+            <div class="header-chips">
+              <span class="status-badge" [class]="getStatusClass(customer.accountStatus)">
+                <span class="status-dot" aria-hidden="true"></span>
+                {{ statusLabel(customer.accountStatus) }}
+              </span>
+              @if (customer.emailVerified) {
+                <span class="verified-chip verified-yes">Verified</span>
+              } @else {
+                <span class="verified-chip verified-no">Unverified</span>
+              }
+              <span class="rep-chip" [class]="repScoreClass(customer.reputationScore)">
+                Score {{ customer.reputationScore }}
+              </span>
+            </div>
+          </div>
+        } @else {
+          <h1 class="page-title">Customer details</h1>
+        }
+      </header>
+
+      @if (isLoading) {
+        <div class="loading-state">
+          <div class="spinner"></div>
+          <p>Loading customer…</p>
+        </div>
+      } @else if (error) {
+        <div class="error-state">
+          <p class="error-message">{{ error }}</p>
+          <button type="button" class="retry-btn" (click)="load()">Retry</button>
+        </div>
+      } @else if (customer) {
+        <section class="nexus-panel profile-panel">
+          <h2 class="nexus-panel-title">Customer data</h2>
+          <dl class="profile-grid">
+            <div>
+              <dt>Name</dt>
+              <dd>{{ customer.firstName }} {{ customer.lastName }}</dd>
+            </div>
+            <div>
+              <dt>Email</dt>
+              <dd>{{ customer.email }}</dd>
+            </div>
+            <div>
+              <dt>Phone</dt>
+              <dd>{{ customer.professionalContactPhone || '—' }}</dd>
+            </div>
+            <div>
+              <dt>Status</dt>
+              <dd>
+                <span class="status-badge" [class]="getStatusClass(customer.accountStatus)">
+                  <span class="status-dot" aria-hidden="true"></span>
+                  {{ statusLabel(customer.accountStatus) }}
+                </span>
+              </dd>
+            </div>
+            <div>
+              <dt>Verified</dt>
+              <dd>
+                @if (customer.emailVerified) {
+                  <span class="verified-chip verified-yes">Verified</span>
+                } @else {
+                  <span class="verified-chip verified-no">Unverified</span>
+                }
+              </dd>
+            </div>
+            <div>
+              <dt>Score</dt>
+              <dd>
+                <span class="rep-chip" [class]="repScoreClass(customer.reputationScore)">
+                  {{ customer.reputationScore }}
+                </span>
+              </dd>
+            </div>
+            <div>
+              <dt>Type</dt>
+              <dd>
+                @if (customer.sellerClassification === 'professional') {
+                  <span class="type-chip type-pro">Pro</span>
+                } @else {
+                  <span class="type-chip type-private">Private</span>
+                }
+              </dd>
+            </div>
+            <div>
+              <dt>Joined</dt>
+              <dd>{{ formatDate(customer.createdAt) }}</dd>
+            </div>
+            <div>
+              <dt>Last login</dt>
+              <dd>{{ formatDate(customer.lastLogin) }}</dd>
+            </div>
+            <div>
+              <dt>Content restriction</dt>
+              <dd>
+                @if (isContentRestricted()) {
+                  <span class="status-badge status-suspended">
+                    <span class="status-dot" aria-hidden="true"></span>
+                    Until {{ formatDate(customer.contentRestrictedUntil) }}
+                  </span>
+                } @else {
+                  —
+                }
+              </dd>
+            </div>
+            <div>
+              <dt>Violations</dt>
+              <dd>{{ customer.contentViolationCount ?? 0 }}</dd>
+            </div>
+            @if (customer.sellerClassification === 'professional') {
+              <div>
+                <dt>Professional name</dt>
+                <dd>{{ customer.professionalTradeName || customer.professionalLegalName || '—' }}</dd>
+              </div>
+              <div>
+                <dt>Pro verification</dt>
+                <dd>{{ customer.professionalVerificationStatus || '—' }}</dd>
+              </div>
+            }
+          </dl>
+        </section>
+
+        <section class="nexus-panel history-panel">
+          <div class="history-head">
+            <h2 class="nexus-panel-title">Transaction history</h2>
+            <div class="history-tabs" role="tablist">
+              <button
+                type="button"
+                role="tab"
+                class="history-tab"
+                [class.active]="historyTab === 'purchases'"
+                [attr.aria-selected]="historyTab === 'purchases'"
+                (click)="historyTab = 'purchases'"
+              >
+                Purchases
+                <span class="tab-count">{{ purchases.length }}</span>
+              </button>
+              <button
+                type="button"
+                role="tab"
+                class="history-tab"
+                [class.active]="historyTab === 'sales'"
+                [attr.aria-selected]="historyTab === 'sales'"
+                (click)="historyTab = 'sales'"
+              >
+                Sales
+                <span class="tab-count">{{ sales.length }}</span>
+              </button>
+            </div>
+          </div>
+
+          @if (historyTab === 'purchases') {
+            @if (purchases.length === 0) {
+              <p class="empty-history">No purchases yet.</p>
+            } @else {
+              <div class="table-scroll">
+                <table class="nexus-data-table">
+                  <thead>
+                    <tr>
+                      <th scope="col">Listing</th>
+                      <th scope="col">Seller</th>
+                      <th scope="col" class="num">Amount</th>
+                      <th scope="col">Status</th>
+                      <th scope="col">Date</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    @for (t of purchases; track t._id) {
+                      <tr>
+                        <td>
+                          @if (t.listing?.slug) {
+                            <a class="listing-link" [routerLink]="['/listing', t.listing!.slug]" target="_blank">
+                              {{ t.listing?.title || 'Listing' }}
+                            </a>
+                          } @else {
+                            {{ t.listing?.title || '—' }}
+                          }
+                        </td>
+                        <td>{{ counterparty(t, 'purchases') }}</td>
+                        <td class="num">{{ formatMoney(t.amount) }}</td>
+                        <td>
+                          <span class="tx-badge" [class]="txStatusClass(t)">{{ txStatus(t) }}</span>
+                        </td>
+                        <td class="date-cell">{{ formatDate(t.createdAt) }}</td>
+                      </tr>
+                    }
+                  </tbody>
+                </table>
+              </div>
+            }
+          } @else {
+            @if (sales.length === 0) {
+              <p class="empty-history">No sales yet.</p>
+            } @else {
+              <div class="table-scroll">
+                <table class="nexus-data-table">
+                  <thead>
+                    <tr>
+                      <th scope="col">Listing</th>
+                      <th scope="col">Buyer</th>
+                      <th scope="col" class="num">Amount</th>
+                      <th scope="col">Status</th>
+                      <th scope="col">Date</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    @for (t of sales; track t._id) {
+                      <tr>
+                        <td>
+                          @if (t.listing?.slug) {
+                            <a class="listing-link" [routerLink]="['/listing', t.listing!.slug]" target="_blank">
+                              {{ t.listing?.title || 'Listing' }}
+                            </a>
+                          } @else {
+                            {{ t.listing?.title || '—' }}
+                          }
+                        </td>
+                        <td>{{ counterparty(t, 'sales') }}</td>
+                        <td class="num">{{ formatMoney(t.amount) }}</td>
+                        <td>
+                          <span class="tx-badge" [class]="txStatusClass(t)">{{ txStatus(t) }}</span>
+                        </td>
+                        <td class="date-cell">{{ formatDate(t.createdAt) }}</td>
+                      </tr>
+                    }
+                  </tbody>
+                </table>
+              </div>
+            }
+          }
+        </section>
+
+        <footer class="footer-actions">
+          <button
+            type="button"
+            class="unlock-btn"
+            [disabled]="!canUnlock()"
+            [title]="isContentRestricted() ? 'Lift content restriction' : 'No active content restriction'"
+            (click)="unlock()"
+          >
+            {{ unlocking ? 'Unlocking…' : 'Unlock' }}
+          </button>
+          <button
+            type="button"
+            class="delete-btn"
+            [disabled]="!canDelete()"
+            (click)="deleteAccount()"
+          >
+            {{ deleting ? 'Closing…' : 'Delete' }}
+          </button>
+        </footer>
+      }
+
+    </div>
+  </div>
+</div>
